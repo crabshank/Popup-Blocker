@@ -1,3 +1,4 @@
+try {
 function getUrl(tab){
 	return (tab.url=="")?tab.pendingUrl:tab.url;
 }
@@ -18,3 +19,6 @@ chrome.windows.onCreated.addListener((window) => {
 			});
 	}
 });
+} catch (e) {
+  console.error(e);
+}
