@@ -1,1 +1,1 @@
-console.log('Popup closer has access!')
+console.log('Popup closer has access!');
