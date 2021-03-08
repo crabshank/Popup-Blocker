@@ -2,6 +2,15 @@
   "manifest_version": 3,
   "name": "Popup closer",
   "version": "2021.03",
+      "content_scripts": [
+    {
+	      "all_frames": true,
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": ["content.js"]
+    }
+  ],
    "background": {
  "service_worker": "background.js"
   },
