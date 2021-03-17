@@ -1,1 +1,1 @@
-console.log('Popup closer has access!');
+chrome.runtime.sendMessage({msg:window.location.href}, function(response){});

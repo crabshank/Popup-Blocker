@@ -3,8 +3,8 @@ function getUrl(tab){
 	return (tab.url=="" && !!tab.pendingUrl && typeof tab.pendingUrl!=='undefined' && tab.pendingUrl!='')?tab.pendingUrl:tab.url;
 }
 
-chrome.windows.onCreated.addListener((window) => {
-	if (window.type==='popup'){
+function windowProc(window){
+		if (window.type==='popup'){
 		chrome.tabs.query({windowId: window.id}, function(tabs) {
 			let xmp=false;
 			for (let t = 0; t < tabs.length; t++) {
@@ -18,7 +18,23 @@ chrome.windows.onCreated.addListener((window) => {
 			}
 			});
 	}
+}
+
+function handleMessage(request, sender, sendResponse) {
+	chrome.windows.get(sender.tab.windowId,(window) => {
+		windowProc(window)
+	});
+}
+
+chrome.runtime.onMessage.addListener(handleMessage);
+
+
+chrome.windows.onCreated.addListener((window) => {
+	windowProc(window);
 });
+
+
+
 } catch (e) {
   console.error(e);
 }
