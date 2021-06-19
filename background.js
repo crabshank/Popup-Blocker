@@ -4,6 +4,7 @@ function getUrl(tab){
 }
 
 function windowProc(window){
+		return new Promise((resolve, reject)=>{
 		if (window.type==='popup'){
 		chrome.tabs.query({windowId: window.id}, function(tabs) {
 			let xmp=false;
@@ -14,16 +15,20 @@ function windowProc(window){
 			}
 		}
 			if(!xmp){
-			chrome.windows.remove(window.id);
-			}
+			chrome.windows.remove(window.id,function() {resolve();});
+			}else{resolve();}
 			});
 	}
+	resolve();
+});
 }
 
 function handleMessage(request, sender, sendResponse) {
+			return new Promise((resolve, reject)=>{
 	chrome.windows.get(sender.tab.windowId,(window) => {
-		windowProc(window)
+		windowProc(window);
 	});
+			});
 }
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
