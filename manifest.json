@@ -1,14 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Popup closer",
-  "version": "2021.05",
+  "version": "2021.6",
       "content_scripts": [
     {
 	      "all_frames": true,
       "matches": [
         "<all_urls>"
       ],
-      "js": ["content.js"]
+      "js": ["content.js","port_connect.js"]
     }
   ],
    "background": {
