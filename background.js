@@ -18,11 +18,11 @@ function keepAliveForced() {
 }
 
 async function keepAlive() {
-if (!!lifeline) return;
-  for (var tab of await chrome.tabs.query({ url:"*://*/*"})) {
+ if (!!lifeline) return;
+  for (var tab of await chrome.tabs.query({ url:"<all_urls>"})) {
     try {
 							chrome.scripting.executeScript({
-								  target: {tabId: tab.id, allFrames: true},
+								  target: {tabId: tab.id},
 								  files: ['port_connect.js'],
 								}, () => {});
 	  console.log(lifeline);
