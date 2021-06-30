@@ -6,7 +6,7 @@ try {
 
 function windowProc(window){
 		if (window.type==='popup'){
-		self.chrome.tabs.query({windowId: window.id}, function(tabs) {
+		chrome.tabs.query({windowId: window.id}, function(tabs) {
 			let xmp=false;
 			for (let t = 0; t < tabs.length; t++) {
 			if(getUrl(tabs[t]).startsWith('chrome-extension://')){
@@ -15,26 +15,26 @@ function windowProc(window){
 			}
 		}
 			if(!xmp){
-			self.chrome.windows.remove(window.id);
+			chrome.windows.remove(window.id);
 			}
 			});
 	}
 }
 
 function handleMessage(request, sender, sendResponse) {
-	self.chrome.windows.get(sender.tab.windowId,(window) => {
+	chrome.windows.get(sender.tab.windowId,(window) => {
 		windowProc(window)
 	});
 }
 
-self.chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
  handleMessage(request, sender, sendResponse);
   return true;
 });
 	
 
 
-self.chrome.windows.onCreated.addListener((window) => {
+chrome.windows.onCreated.addListener((window) => {
 	windowProc(window);
 });
 
