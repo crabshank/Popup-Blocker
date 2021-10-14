@@ -3,6 +3,12 @@ function getUrl(tab) {
 }
 
 try {
+chrome.tabs.onCreated.addListener(function(tab) {
+							chrome.scripting.executeScript({
+								  target: {tabId: tab.id, allFrames: true},
+								  files: ['content.js'],
+								}, () => {});
+});
 
 function windowProc(window){
 		if (window.type==='popup'){
