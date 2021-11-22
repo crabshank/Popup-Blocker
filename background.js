@@ -4,10 +4,20 @@ function getUrl(tab) {
 
 try {
 chrome.tabs.onCreated.addListener(function(tab) {
-	chrome.scripting.executeScript({
+		chrome.scripting.executeScript({
 		target: {tabId: tab.id, allFrames: true},
 		files: ['content.js'],
-	}, () => {});
+		}, () => {
+				if(typeof tab.openerTabId!=='undefined'){
+					chrome.tabs.query({}, function(tabs) {
+							chrome.tabs.sendMessage(tab.openerTabId, {
+								type: "checkLinks",
+								opnr: tab.openerTabId,
+								chk: tab.id
+							}, function(response) {});
+					});	
+				}	
+		});
 });
 
 function windowProc(window){
@@ -28,16 +38,26 @@ function windowProc(window){
 }
 
 function handleMessage(request, sender, sendResponse) {
+	if(request.type=="page"){
 	chrome.windows.get(sender.tab.windowId,(window) => {
 		windowProc(window)
 	});
+	}else if(request.type=="links"){
+			chrome.tabs.query({}, function(tabs) {
+				let tbs=tabs.filter((tb)=>{return tb.id==request.chk;});
+				tbs.forEach((tb)=>{
+					if(!request.links.includes(getUrl(tb))){
+						chrome.tabs.update(request.opnr, {highlighted: true});
+					}
+				});
+			});
+	}
 }
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
  handleMessage(request, sender, sendResponse);
   return true;
 });
-	
 
 
 chrome.windows.onCreated.addListener((window) => {
