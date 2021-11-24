@@ -10,8 +10,6 @@ chrome.tabs.onCreated.addListener(function(tab) {
 		}, () => {
 				if(typeof tab.openerTabId!=='undefined'){
 					chrome.tabs.query({}, function(tabs) {
-						chrome.tabs.update(tab.openerTabId, {highlighted: false});
-						chrome.tabs.update(tab.id, {highlighted: true});
 							chrome.tabs.sendMessage(tab.openerTabId, {
 								type: "checkLinks",
 								opnr: tab.openerTabId,
