@@ -9,14 +9,21 @@ chrome.tabs.onCreated.addListener(function(tab) {
 		files: ['content.js'],
 		}, () => {
 				if(typeof tab.openerTabId!=='undefined'){
+						let tbact=tab.active;
 					chrome.tabs.query({}, function(tabs) {
-
 							chrome.tabs.sendMessage(tab.openerTabId, {
 								type: "checkLinks",
 								opnr: tab.openerTabId,
 								chk: tab.id
 							}, function(response) {});
 					});	
+					if(tbact){
+						chrome.tabs.update(tab.openerTabId, {highlighted: false});
+						chrome.tabs.update(tab.id, {highlighted: true});
+					}else{
+						chrome.tabs.update(tab.id, {highlighted: false});
+						chrome.tabs.update(tab.openerTabId, {highlighted: true});
+					}
 				}	
 		});
 });
@@ -54,11 +61,6 @@ function handleMessage(request, sender, sendResponse) {
 						}else{
 							chrome.tabs.update(request.chk, {highlighted: false});
 							chrome.tabs.update(request.opnr, {highlighted: true});
-						}
-					}else{
-						if((request.links.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
-							chrome.tabs.update(request.opnr, {highlighted: false});
-							chrome.tabs.update(request.chk, {highlighted: true});
 						}
 					}
 				});
