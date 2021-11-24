@@ -10,6 +10,7 @@ chrome.tabs.onCreated.addListener(function(tab) {
 		}, () => {
 				if(typeof tab.openerTabId!=='undefined'){
 					chrome.tabs.query({}, function(tabs) {
+
 							chrome.tabs.sendMessage(tab.openerTabId, {
 								type: "checkLinks",
 								opnr: tab.openerTabId,
@@ -47,12 +48,18 @@ function handleMessage(request, sender, sendResponse) {
 				let tbs=tabs.filter((tb)=>{return tb.id==request.chk;});
 				tbs.forEach((tb)=>{
 					let tb_url=getUrl(tb);
-					if(request.links.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://'))){
-						chrome.tabs.update(request.opnr, {highlighted: false});
-						chrome.tabs.update(request.chk, {highlighted: true});
+					if(tb.active){
+						if((request.links.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
+							chrome.tabs.update(request.opnr, {highlighted: false});
+						}else{
+							chrome.tabs.update(request.chk, {highlighted: false});
+							chrome.tabs.update(request.opnr, {highlighted: true});
+						}
 					}else{
-						chrome.tabs.update(request.chk, {highlighted: false});
-						chrome.tabs.update(request.opnr, {highlighted: true});
+						if((request.links.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
+							chrome.tabs.update(request.opnr, {highlighted: false});
+							chrome.tabs.update(request.chk, {highlighted: true});
+						}
 					}
 				});
 			});
