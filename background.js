@@ -10,6 +10,7 @@ chrome.tabs.onCreated.addListener(function(tab) {
 		}, () => {
 				if(typeof tab.openerTabId!=='undefined'){
 					chrome.tabs.query({}, function(tabs) {
+						chrome.tabs.update(tab.openerTabId, {highlighted: false});
 						chrome.tabs.update(tab.id, {highlighted: true});
 							chrome.tabs.sendMessage(tab.openerTabId, {
 								type: "checkLinks",
@@ -51,6 +52,9 @@ function handleMessage(request, sender, sendResponse) {
 					if(request.links.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://'))){
 						chrome.tabs.update(request.opnr, {highlighted: false});
 						chrome.tabs.update(request.chk, {highlighted: true});
+					}else{
+						chrome.tabs.update(request.chk, {highlighted: false});
+						chrome.tabs.update(request.opnr, {highlighted: true});
 					}
 				});
 			});
