@@ -46,7 +46,8 @@ function handleMessage(request, sender, sendResponse) {
 			chrome.tabs.query({}, function(tabs) {
 				let tbs=tabs.filter((tb)=>{return tb.id==request.chk;});
 				tbs.forEach((tb)=>{
-					if(!request.links.includes(getUrl(tb))){
+					let tb_url=getUrl(tb);
+					if(!request.links.includes(tb_url) && (!tb_url.startsWith('chrome://')) && (!tb_url.startsWith('chrome-extension://'))){
 						chrome.tabs.update(request.opnr, {highlighted: true});
 					}
 				});
