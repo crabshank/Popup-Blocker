@@ -4,9 +4,9 @@ function getUrl(tab) {
 
 try {
 	
-	var to_suspend=[];
+	var to_discard=[];
 	
-function suspendTab(id){
+function discardTab(id){
 				chrome.tabs.discard(id, function(tab){
 						console.log('Tab '+tab.id+' discarded.');
 					});
@@ -54,16 +54,16 @@ function windowProc(window){
 	}
 }
 
-function doSuspend(id,url){
-	let chk=to_suspend.filter((t)=>{return t[0]==id && t[1]==url;});
+function handleDiscard(id,url){
+	let chk=to_discard.filter((t)=>{return t[0]==id && t[1]==url;});
 	if(chk.length>0){
-		suspendTab(id);
-		to_suspend=to_suspend.filter((t)=>{return !(t[0]==id && t[1]==url);});
+		discardTab(id);
+		to_discard=to_discard.filter((t)=>{return !(t[0]==id && t[1]==url);});
 	}
 }
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, changedTab) {
-	doSuspend(tabId,changeInfo.url);
+	handleDiscard(tabId,changeInfo.url);
 });
 
 function handleMessage(request, sender, sendResponse) {
@@ -80,7 +80,7 @@ function handleMessage(request, sender, sendResponse) {
 						if((request.links.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
 							chrome.tabs.update(request.opnr, {highlighted: false});
 						}else{
-							to_suspend.push([request.chk,tb_url]);
+							to_discard.push([request.chk,tb_url]);
 								chrome.tabs.update(request.chk, {highlighted: false});
 								chrome.tabs.update(request.opnr, {highlighted: true});
 						}
