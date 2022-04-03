@@ -4,29 +4,53 @@ function getUrl(tab) {
 
 try {
 	
-function suspendTab(ids){
-	//ids={r: opene_r_, d: opene_d_}
 	
-	var pds={};
-	chrome.processes.getProcessIdForTab(ids.d, function(pid1){
-		pds.d=pid1;
-		chrome.processes.getProcessIdForTab(ids.r, function(pid2){
-			pds.r=pid2;
-			
-			if(pds.d != pds.r){
-				chrome.processes.terminate(pds.d, function(didTerminate){
+	
+function suspendTab(id){
+	var tb_ids=[];
+	
+				async function chk() {
+					if(tb_ids.length>0){
+								await new Promise(function(resolve, reject) {
+									var count=0;
+									for (let i=0; i<tb_ids.length; i++) {
+												chrome.processes.getProcessIdForTab(tb_ids[i][0], function(pid){
+													tb_ids[i][1]=pid;
+													count++;
+													if(count==tb_ids.length){
+														resolve();
+													}
+												});
+											}
+									}).then((result) => {;}).catch((result) => {;});
+				}
+			}
+	
+	
+	
+	chrome.tabs.query({}, function(tabs) {
+		for (let i=0; i<tabs.length; i++) {
+			tb_ids.push([tabs[i].id,null]);
+		}
+		chk();
+		
+		let curr=tb_ids.filter((d)=>{return d[0]===id;});
+		let lng=tb_ids.filter((d)=>{return d[1]===curr[0][1] && curr[0][1]!=null;});
+		
+			if(lng.length==1){
+				chrome.processes.terminate(lng[1], function(didTerminate){
 					if(didTerminate){
-						console.log('Tab '+ids.d+'\'s process terminated');
+						console.log('Tab '+id+'\'s process terminated.');
 					}else{
-						console.log('Tab '+ids.d+'\'s process failed to terminate');
+						console.log('Tab '+id+'\'s process failed to terminate.');
 					}
 				});	
 			}else{
-				console.log('Opener and opened tabs ('+ids.r+' and '+ids.d+') have the same process id, so no tab\'s process terminated');
+				console.log('Opened tab ('+id+') doesn\'t have a unique id, so no tab\'s process terminated.');
 			}
-			
-		});
+		
 	});
+
 }
 	
 chrome.tabs.onCreated.addListener(function(tab) {
@@ -85,7 +109,7 @@ function handleMessage(request, sender, sendResponse) {
 						if((request.links.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
 							chrome.tabs.update(request.opnr, {highlighted: false});
 						}else{
-								suspendTab({d: request.chk, r:request.opnr});
+								suspendTab(request.chk);
 								chrome.tabs.update(request.chk, {highlighted: false});
 								chrome.tabs.update(request.opnr, {highlighted: true});
 						}
