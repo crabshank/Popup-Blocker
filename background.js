@@ -58,8 +58,8 @@ function doSuspend(id,url){
 	let chk=to_suspend.filter((t)=>{return t[0]==id && t[1]==url;});
 	if(chk.length>0){
 		suspendTab(id);
+		to_suspend=to_suspend.filter((t)=>{return !(t[0]==id && t[1]==url);});
 	}
-	to_suspend=to_suspend.filter((t)=>{return !(t[0]==id && t[1]==url);});
 }
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, changedTab) {
