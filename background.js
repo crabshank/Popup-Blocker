@@ -51,7 +51,7 @@ function suspendTab(id){
 					}
 				});	
 			}else{
-				console.log('Opened tab ('+id+') doesn\'t have a unique id, so no tab\'s process terminated.');
+				console.log('Opened tab ('+id+') doesn\'t have a unique pid, so no tab\'s process terminated.');
 			}
 		
 	});
