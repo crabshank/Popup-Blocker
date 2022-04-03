@@ -3,6 +3,32 @@ function getUrl(tab) {
 }
 
 try {
+	
+function suspendTab(ids){
+	//ids={r: opene_r_, d: opene_d_}
+	
+	var pds={};
+	chrome.processes.getProcessIdForTab(ids.d, function(pid1){
+		pds.d=pid1;
+		chrome.processes.getProcessIdForTab(ids.r, function(pid2){
+			pds.r=pid2;
+			
+			if(pds.d != pds.r){
+				chrome.processes.terminate(pds.d, function(didTerminate){
+					if(didTerminate){
+						console.log('Tab '+ids.d+'\'s process terminated');
+					}else{
+						console.log('Tab '+ids.d+'\'s process failed to terminate');
+					}
+				});	
+			}else{
+				console.log('Opener and opened tabs ('+ids.r+' and '+ids.d+') have the same process id, so no tab\'s process terminated');
+			}
+			
+		});
+	});
+}
+	
 chrome.tabs.onCreated.addListener(function(tab) {
 		chrome.scripting.executeScript({
 		target: {tabId: tab.id, allFrames: true},
@@ -59,8 +85,9 @@ function handleMessage(request, sender, sendResponse) {
 						if((request.links.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
 							chrome.tabs.update(request.opnr, {highlighted: false});
 						}else{
-							chrome.tabs.update(request.chk, {highlighted: false});
-							chrome.tabs.update(request.opnr, {highlighted: true});
+								suspendTab({d: request.chk, r:request.opnr});
+								chrome.tabs.update(request.chk, {highlighted: false});
+								chrome.tabs.update(request.opnr, {highlighted: true});
 						}
 					}
 				});

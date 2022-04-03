@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Popup closer",
-  "version": "2021.11",
+  "version": "2022.4",
       "content_scripts": [
     {
 	      "all_frames": true,
@@ -18,7 +18,7 @@
    "background": {
  "service_worker": "background.js"
   },
-     "permissions": ["tabs", "activeTab","scripting"],
+     "permissions": ["tabs", "activeTab","scripting","processes"],
   "action": {
     "default_icon": "close.png",
 	   "default_title": "Close popup tabs/windows"
