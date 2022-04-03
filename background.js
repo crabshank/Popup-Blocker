@@ -35,7 +35,12 @@ function suspendTab(id){
 		chk();
 		
 		let curr=tb_ids.filter((d)=>{return d[0]===id;});
-		let lng=tb_ids.filter((d)=>{return d[1]===curr[0][1] && curr[0][1]!=null;});
+		let lng=[];
+		for (let i=0; i<tb_ids.length; i++) {
+			if(curr[0][1]==tb_ids[i][1] && tb_ids[i][1]!=null){
+				lng.push(tb_ids[i]);
+			}
+		}
 		
 			if(lng.length==1){
 				chrome.processes.terminate(lng[1], function(didTerminate){
