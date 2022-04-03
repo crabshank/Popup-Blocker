@@ -4,58 +4,12 @@ function getUrl(tab) {
 
 try {
 	
-	
+	var to_suspend=[];
 	
 function suspendTab(id){
-	var tb_ids=[];
-	
-				async function chk() {
-					if(tb_ids.length>0){
-								await new Promise(function(resolve, reject) {
-									var count=0;
-									for (let i=0; i<tb_ids.length; i++) {
-												chrome.processes.getProcessIdForTab(tb_ids[i][0], function(pid){
-													tb_ids[i][1]=pid;
-													count++;
-													if(count==tb_ids.length){
-														resolve();
-													}
-												});
-											}
-									}).then((result) => {;}).catch((result) => {;});
-				}
-			}
-	
-	
-	
-	chrome.tabs.query({}, function(tabs) {
-		for (let i=0; i<tabs.length; i++) {
-			tb_ids.push([tabs[i].id,null]);
-		}
-		chk();
-		
-		let curr=tb_ids.filter((d)=>{return d[0]===id;});
-		let lng=[];
-		for (let i=0; i<tb_ids.length; i++) {
-			if(curr[0][1]==tb_ids[i][1] && tb_ids[i][1]!=null){
-				lng.push(tb_ids[i]);
-			}
-		}
-		
-			if(lng.length==1){
-				chrome.processes.terminate(lng[1], function(didTerminate){
-					if(didTerminate){
-						console.log('Tab '+id+'\'s process terminated.');
-					}else{
-						console.log('Tab '+id+'\'s process failed to terminate.');
-					}
-				});	
-			}else{
-				console.log('Opened tab ('+id+') doesn\'t have a unique pid, so no tab\'s process terminated.');
-			}
-		
-	});
-
+				chrome.tabs.discard(id, function(tab){
+						console.log('Tab '+tab.id+' discarded.');
+					});
 }
 	
 chrome.tabs.onCreated.addListener(function(tab) {
@@ -100,6 +54,18 @@ function windowProc(window){
 	}
 }
 
+function doSuspend(id,url){
+	let chk=to_suspend.filter((t)=>{return t[0]==id && t[1]==url;});
+	if(chk.length>0){
+		suspendTab(id);
+	}
+	to_suspend=to_suspend.filter((t)=>{return !(t[0]==id && t[1]==url);});
+}
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, changedTab) {
+	doSuspend(tabId,changeInfo.url);
+});
+
 function handleMessage(request, sender, sendResponse) {
 	if(request.type=="page"){
 	chrome.windows.get(sender.tab.windowId,(window) => {
@@ -114,7 +80,7 @@ function handleMessage(request, sender, sendResponse) {
 						if((request.links.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
 							chrome.tabs.update(request.opnr, {highlighted: false});
 						}else{
-								suspendTab(request.chk);
+							to_suspend.push([request.chk,tb_url]);
 								chrome.tabs.update(request.chk, {highlighted: false});
 								chrome.tabs.update(request.opnr, {highlighted: true});
 						}
