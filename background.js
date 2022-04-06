@@ -3,7 +3,120 @@ function getUrl(tab) {
 }
 
 try {
-	
+
+var blacklist=[];
+var whitelist=[];
+
+function removeEls(d, array){
+	var newArray = [];
+	for (let i = 0; i < array.length; i++)
+	{
+		if (array[i] != d)
+		{
+			newArray.push(array[i]);
+		}
+	}
+	return newArray;
+}
+
+function findIndexTotalInsens(string, substring, index) {
+    string = string.toLocaleLowerCase();
+    substring = substring.toLocaleLowerCase();
+    for (let i = 0; i < string.length ; i++) {
+        if ((string.includes(substring, i)) && (!(string.includes(substring, i + 1)))) {
+            index.push(i);
+            break;
+        }
+    }
+    return index;
+}
+
+function blacklistMatch(array, t) {
+    var found = false;
+	var blSite='';
+    if (!((array.length == 1 && array[0] == "") || (array.length == 0))) {
+        ts = t.toLocaleLowerCase();
+        for (var i = 0; i < array.length; i++) {
+            let spl = array[i].split('*');
+            spl = removeEls("", spl);
+
+            var spl_mt = [];
+            for (let k = 0; k < spl.length; k++) {
+                var spl_m = [];
+                findIndexTotalInsens(ts, spl[k], spl_m);
+
+                spl_mt.push(spl_m);
+
+
+            }
+
+            found = true;
+
+            if ((spl_mt.length == 1) && (typeof spl_mt[0][0] === "undefined")) {
+                found = false;
+            } else if (!((spl_mt.length == 1) && (typeof spl_mt[0][0] !== "undefined"))) {
+
+                for (let m = 0; m < spl_mt.length - 1; m++) {
+
+                    if ((typeof spl_mt[m][0] === "undefined") || (typeof spl_mt[m + 1][0] === "undefined")) {
+                        found = false;
+                        m = spl_mt.length - 2; //EARLY TERMINATE
+                    } else if (!(spl_mt[m + 1][0] > spl_mt[m][0])) {
+                        found = false;
+                    }
+                }
+
+            }
+            blSite = (found) ? array[i] : blSite;
+            i = (found) ? array.length - 1 : i;
+        }
+    }
+    //console.log(found);
+    return [found,blSite];
+
+}
+
+function restore_options()
+{
+	if(typeof chrome.storage==='undefined'){
+		restore_options();
+	}else{
+	chrome.storage.sync.get(null, function(items){
+		
+		if (Object.keys(items).length != 0)
+		{
+
+		if(!!items.bList && typeof  items.bList!=='undefined'){
+			blacklist=items.bList.split('\n').join('').split(',');
+		}		
+		
+		if(!!items.wList && typeof  items.wList!=='undefined'){
+			whitelist=items.wList.split('\n').join('').split(',');
+		}
+		
+		}else{
+			save_options();
+			restore_options();
+		}
+	});
+	}
+}
+
+function save_options()
+{
+		chrome.storage.sync.clear(function() {
+				chrome.storage.sync.set(
+				{
+					bList: "",
+					wList: ""
+				}, function(){
+					console.log('Default options saved.');
+					restore_options();
+				});
+		});
+
+}
+
 var to_discard=[];
 var discarded=[];
 	
@@ -69,10 +182,12 @@ function windowProc(window){
 		chrome.tabs.query({windowId: window.id}, function(tabs) {
 			let xmp=false;
 			for (let t = 0; t < tabs.length; t++) {
-			if(getUrl(tabs[t]).startsWith('chrome-extension://')){
-				xmp=true;
-				break;
-			}
+				let t_url=getUrl(tabs[t]);
+				let isWl=blacklistMatch(whitelist,t_url);
+				if(t_url.startsWith('chrome-extension://') || isWl[0]){
+					xmp=true;
+					break;
+				}
 		}
 			if(!xmp){
 			chrome.windows.remove(window.id);
@@ -107,9 +222,20 @@ function handleMessage(request, sender, sendResponse) {
 						if((request.links.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
 							chrome.tabs.update(request.opnr, {highlighted: false});
 						}else{
+										
+				var isBl=blacklistMatch(blacklist,tb_url);
+						if(isBl[0]){						
+							chrome.tabs.remove(
+								request.chk,
+								 function(){
+									 chrome.tabs.update(request.opnr, {highlighted: true});
+							});
+						}else{
 							to_discard.push([request.chk,tb_url]);
-								chrome.tabs.update(request.chk, {highlighted: false});
-								chrome.tabs.update(request.opnr, {highlighted: true});
+							chrome.tabs.update(request.chk, {highlighted: false});
+							chrome.tabs.update(request.opnr, {highlighted: true});
+						}
+							
 						}
 					}
 				});
@@ -127,7 +253,7 @@ chrome.windows.onCreated.addListener((window) => {
 	windowProc(window);
 });
 
-
+restore_options();
 
 } catch (e) {
   console.error(e);
