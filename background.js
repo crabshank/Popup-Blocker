@@ -216,11 +216,15 @@ function handleMessage(request, sender, sendResponse) {
 	}else if(request.type=="links"){
 			chrome.tabs.query({}, function(tabs) {
 				let tbs=tabs.filter((tb)=>{return tb.id==request.chk;});
+				let tbs_URLs=tabs.map((tb)=>{return getUrl(tb);});
 				tbs.forEach((tb)=>{
 					let tb_url=getUrl(tb);
 					if(tb.active){
 						if((request.links.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
 							chrome.tabs.update(request.opnr, {highlighted: false});
+						}else if(tbs_URLs.includes(tb_url)){
+							chrome.tabs.update(request.chk, {highlighted: false});
+							chrome.tabs.update(request.opnr, {highlighted: true});
 						}else{
 										
 				var isBl=blacklistMatch(blacklist,tb_url);
