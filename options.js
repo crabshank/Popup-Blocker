@@ -7,6 +7,11 @@ blklst.style.height = 'inherit';
 blklst.style.height = (blklst.scrollHeight+7)+"px";
 }
 
+wlst.oninput=function () {
+wlst.style.height = 'inherit';
+wlst.style.height = (wlst.scrollHeight+7)+"px";
+}
+
 function removeEls(d, array){
 	var newArray = [];
 	for (let i = 0; i < array.length; i++)
