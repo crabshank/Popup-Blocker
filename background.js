@@ -4,14 +4,41 @@ function getUrl(tab) {
 
 try {
 	
-	var to_discard=[];
+var to_discard=[];
+var discarded=[];
 	
-function discardTab(id){
+function discardTab(id,push){
 				chrome.tabs.discard(id, function(tab){
-						console.log('Tab '+tab.id+' discarded.');
+						if(push){
+							discarded.push(tab.id);
+							console.log('Tab '+tab.id+' discarded.');
+						}
 					});
 }
-	
+
+function replaceTabs(r,a){
+	to_discard=to_discard.map((t)=>{return (t[0]==r)?[a,...t.slice(1)]:t;});
+	discarded=discarded.map((d)=>{return (d==r)?a:d;});
+}
+
+chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
+	replaceTabs(removedTabId,addedTabId);
+});
+
+chrome.tabs.onActivated.addListener(function(tab){
+	let d=discarded.filter((d)=>{return d==tab.tabId;});
+	let chk=to_discard.filter((t)=>{return t[0]==tab.tabId;});
+	if(d.length>0 && chk.length==0){
+		discardTab(tab.tabId,false);
+	}
+});
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+	if(changeInfo.status!=='unloaded'){
+		discarded=discarded.filter((d)=>{return d!=tab.id;});
+	}
+});
+
 chrome.tabs.onCreated.addListener(function(tab) {
 		chrome.scripting.executeScript({
 		target: {tabId: tab.id, allFrames: true},
@@ -57,9 +84,9 @@ function windowProc(window){
 function handleDiscard(id,url){
 	let chk=to_discard.filter((t)=>{return t[0]==id && t[1]==url;});
 	if(chk.length>0){
-		discardTab(id);
-		to_discard=to_discard.filter((t)=>{return !(t[0]==id && t[1]==url);});
+		discardTab(id,true);
 	}
+	to_discard=to_discard.filter((t)=>{return !(t[0]==id && t[1]==url);});
 }
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, changedTab) {
