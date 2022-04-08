@@ -143,7 +143,9 @@ function save_options()
 	{
 		bList: "",
 		wList: "",
-	}, function(){});
+	}, function(){
+		restore_options();
+	});
 		});
 }
 
