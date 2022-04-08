@@ -131,7 +131,6 @@ function restore_options()
 		else
 		{
 			save_options();
-			restore_options();
 		}
 	});
 	}
