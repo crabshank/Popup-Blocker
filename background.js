@@ -165,7 +165,7 @@ chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 chrome.tabs.onCreated.addListener(function(tab) {
 if (!!tab.openerTabId && typeof tab.openerTabId!=='undefined'){
 					let tbact=tab.active;
-					if(tbact){
+					if(!tbact){
 						chrome.tabs.update(tab.openerTabId, {highlighted: false});
 						chrome.tabs.update(tab.id, {highlighted: true});
 					}else{
