@@ -130,6 +130,7 @@ function discardTab(id,push){
 }
 
 function replaceTabs(r,a){
+	tb_links=tb_links.map((t)=>{return (t[0]==r)?[a,t[1]]:t;});
 	to_discard=to_discard.map((t)=>{return (t[0]==r)?[a,...t.slice(1)]:t;});
 	discarded=discarded.map((d)=>{return (d==r)?a:d;});
 }
