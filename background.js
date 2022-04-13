@@ -228,7 +228,7 @@ function handleMessage(request, sender, sendResponse) {
 						}
 						if((lks.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
 							chrome.tabs.update(sender.tab.openerTabId, {highlighted: false});
-						}else if(tbs_URLs.filter((u)=>{return u===tb_url;}).length>0){
+						}else if(tbs_URLs.filter((u)=>{return u===tb_url;}).length>1){
 							chrome.tabs.update(sender.tab.id, {highlighted: false});
 							chrome.tabs.update(sender.tab.openerTabId, {highlighted: true});
 						}else{
