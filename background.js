@@ -140,8 +140,8 @@ chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
 });
 
 chrome.tabs.onActivated.addListener(function(tab){
-	let d=discarded.filter((d)=>{return d==tab.tabId;});
 	let chk=to_discard.filter((t)=>{return t[0]==tab.tabId;});
+	let d=discarded.filter((d)=>{return d==tab.tabId;});
 	if(d.length>0 && chk.length==0){
 		discardTab(tab.tabId,false);
 	}
@@ -228,7 +228,7 @@ function handleMessage(request, sender, sendResponse) {
 						}
 						if((lks.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
 							chrome.tabs.update(sender.tab.openerTabId, {highlighted: false});
-						}else if(tbs_URLs.filter((u)=>{return u===tb_url;}).length>1){
+						}else if(tbs_URLs.filter((u)=>{return u===tb_url;}).length>1 && to_discard.filter((t)=>{return t[1]==tb_url;})==0 ){
 							chrome.tabs.update(sender.tab.id, {highlighted: false});
 							chrome.tabs.update(sender.tab.openerTabId, {highlighted: true});
 						}else{
