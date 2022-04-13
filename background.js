@@ -156,16 +156,6 @@ chrome.windows.onCreated.addListener((window) => {
    windowProc(window);
 });
 
-chrome.tabs.onCreated.addListener((tab) => {
-if (!!tab.openerTabId && typeof tab.openerTabId!=='undefined'){
-	let tb_lks=tb_links.filter((t)=>{return t[0]==tab.openerTabId;});
-	if(tb_lks.length==0){
-		chrome.tabs.update(tab.openerTabId, {highlighted: true});
-		chrome.tabs.update(tab.id, {highlighted: false});
-	}
-}
-});
-
 chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 	tb_links=tb_links.filter((t)=>{return t[0]!=tabId;});
 	to_discard=to_discard.filter((t)=>{return t[0]!=tabId;});
@@ -173,7 +163,7 @@ chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 });
 	
 chrome.tabs.onCreated.addListener(function(tab) {
-				if(typeof tab.openerTabId!=='undefined'){
+if (!!tab.openerTabId && typeof tab.openerTabId!=='undefined'){
 					let tbact=tab.active;
 					if(tbact){
 						chrome.tabs.update(tab.openerTabId, {highlighted: false});
@@ -182,7 +172,7 @@ chrome.tabs.onCreated.addListener(function(tab) {
 						chrome.tabs.update(tab.id, {highlighted: false});
 						chrome.tabs.update(tab.openerTabId, {highlighted: true});
 					}
-				}	
+}	
 });
 
 function windowProc(window){
