@@ -165,12 +165,12 @@ chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 chrome.tabs.onCreated.addListener(function(tab) {
 if (!!tab.openerTabId && typeof tab.openerTabId!=='undefined'){
 					let tbact=tab.active;
-					if(!tbact){
-						chrome.tabs.update(tab.openerTabId, {highlighted: false});
-						chrome.tabs.update(tab.id, {highlighted: true});
-					}else{
+					if(tbact){
 						chrome.tabs.update(tab.id, {highlighted: false});
 						chrome.tabs.update(tab.openerTabId, {highlighted: true});
+					}else{					
+						chrome.tabs.update(tab.openerTabId, {highlighted: false});
+						chrome.tabs.update(tab.id, {highlighted: true})
 					}
 }	
 });
