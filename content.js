@@ -1,5 +1,6 @@
 try{
-
+var timer;
+var chg = window.location.href;
 function getTagNameShadow(docm, tgn){
 var shrc=[docm];
 var shrc_l=1;
@@ -27,24 +28,45 @@ while(srCnt<shrc_l){
 	return out;
 }
 
-chrome.runtime.sendMessage({type:"page", msg:window.location.href}, function(response){});
 
-chrome.runtime.onMessage.addListener(
-	function(request, sender, sendResponse) {
-		switch (request.type) {
-			case "checkLinks":
-			let lnks= getTagNameShadow(document, 'A').map((lk)=>{return lk.href;});
-				   lnks=lnks.filter((lk)=>{return (typeof lk!=='undefined' &&  !!lk && lk!=='');});
-			let opnr=request.opnr;
-			let chk=request.chk;
-				chrome.runtime.sendMessage({
-					type: "links",
-					links: lnks,
-					opnr: opnr,
-					chk: chk
-				}, function(response) {});
-			break;
-			        return true; 
-		}
-	});
+
+
+function sender(){
+	let lnks= getTagNameShadow(document, 'A').map((lk)=>{return lk.href;});
+	lnks=lnks.filter((lk)=>{return (typeof lk!=='undefined' &&  !!lk && lk!=='');});
+	chrome.runtime.sendMessage({
+		type: "links",
+		links: lnks
+	}, function(response) {});
+}
+	
+sender();
+
+if (typeof observer === "undefined" && typeof timer === "undefined") {
+    sender();
+    const observer = new MutationObserver((mutations) => {
+        if (timer) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(() => {
+
+            if (window.location.href != chg) {
+	            	chg = window.location.href;
+			}
+
+        }, 150);
+    });
+
+ observer.observe(document, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributeOldValue: true,
+        characterDataOldValue: true
+    });
+}
+
+
+
 }catch(e){;}
