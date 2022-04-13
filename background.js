@@ -169,6 +169,7 @@ if (!!tab.openerTabId && typeof tab.openerTabId!=='undefined'){
 chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 	tb_links=tb_links.filter((t)=>{return t[0]!=tabId;});
 	to_discard=to_discard.filter((t)=>{return t[0]!=tabId;});
+	discarded=discarded.filter((d)=>{return d!=tabId;});
 });
 	
 chrome.tabs.onCreated.addListener(function(tab) {
