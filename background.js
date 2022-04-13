@@ -123,7 +123,7 @@ var tb_links=[];
 function discardTab(id,push){
 				chrome.tabs.discard(id, function(tab){
 						if(push){
-							discarded.push(tab.id);
+							discarded.push([tab.id,getUrl(tab)]);
 							console.log('Tab '+tab.id+' discarded.');
 						}
 					});
@@ -132,7 +132,7 @@ function discardTab(id,push){
 function replaceTabs(r,a){
 	tb_links=tb_links.map((t)=>{return (t[0]==r)?[a,t[1]]:t;});
 	to_discard=to_discard.map((t)=>{return (t[0]==r)?[a,...t.slice(1)]:t;});
-	discarded=discarded.map((d)=>{return (d==r)?a:d;});
+	discarded=discarded.map((d)=>{return (d[0]==r)?[a,...d.slice(1)]:d;});
 }
 
 chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
@@ -141,7 +141,7 @@ chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
 
 chrome.tabs.onActivated.addListener(function(tab){
 	let chk=to_discard.filter((t)=>{return t[0]==tab.tabId;});
-	let d=discarded.filter((d)=>{return d==tab.tabId;});
+	let d=discarded.filter((d)=>{return d[0]==tab.tabId;});
 	if(d.length>0 && chk.length==0){
 		discardTab(tab.tabId,false);
 	}
@@ -149,7 +149,7 @@ chrome.tabs.onActivated.addListener(function(tab){
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 	if(changeInfo.status!=='unloaded'){
-		discarded=discarded.filter((d)=>{return d!=tab.id;});
+		discarded=discarded.filter((d)=>{return d[0]!=tab.id;});
 	}
 });
 
@@ -160,7 +160,7 @@ chrome.windows.onCreated.addListener((window) => {
 chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 	tb_links=tb_links.filter((t)=>{return t[0]!=tabId;});
 	to_discard=to_discard.filter((t)=>{return t[0]!=tabId;});
-	discarded=discarded.filter((d)=>{return d!=tabId;});
+	discarded=discarded.filter((d)=>{return d[0]!=tabId;});
 });
 	
 chrome.tabs.onCreated.addListener(function(tab) {
@@ -228,7 +228,7 @@ function handleMessage(request, sender, sendResponse) {
 						}
 						if((lks.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
 							chrome.tabs.update(sender.tab.openerTabId, {highlighted: false});
-						}else if(tbs_URLs.filter((u)=>{return u===tb_url;}).length>1 && to_discard.filter((t)=>{return t[1]==tb_url;})==0 ){
+						}else if(tbs_URLs.filter((u)=>{return u===tb_url;}).length>1 && to_discard.filter((t)=>{return t[1]==tb_url;}).length==0 && discarded.filter((t)=>{return t[1]==tb_url;}).length==0 ){
 							chrome.tabs.update(sender.tab.id, {highlighted: false});
 							chrome.tabs.update(sender.tab.openerTabId, {highlighted: true});
 						}else{
