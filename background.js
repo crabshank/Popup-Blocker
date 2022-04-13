@@ -158,7 +158,7 @@ chrome.windows.onCreated.addListener((window) => {
 
 chrome.tabs.onCreated.addListener((tab) => {
 if (!!tab.openerTabId && typeof tab.openerTabId!=='undefined'){
-	let tb_lks=tb_links.filter((t)=>{return t[0]!=tab.openerTabId;});
+	let tb_lks=tb_links.filter((t)=>{return t[0]==tab.openerTabId;});
 	if(tb_lks.length==0){
 		chrome.tabs.update(tab.openerTabId, {highlighted: true});
 		chrome.tabs.update(tab.id, {highlighted: false});
