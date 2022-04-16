@@ -3,8 +3,8 @@ var timer;
 var chg = window.location.href;
 
 function link_sender(){
-	let lnks= getTagNameShadow(document, 'A').map((lk)=>{return lk.href;});
-	lnks=lnks.filter((lk)=>{return (typeof lk!=='undefined' &&  !!lk && lk!=='');});
+	let lnks= getTagNameShadow(document, 'A').filter((lk)=>{return (typeof lk.href!=='undefined' &&  !!lk.href && lk.href!=='');});
+	lnks=lnks.map((lk)=>{return lk.href;});
 	lnks=Array.from(new Set(lnks));
 	chrome.runtime.sendMessage({
 		type: "links",
