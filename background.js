@@ -156,9 +156,13 @@ chrome.tabs.onActivated.addListener(function(tab){
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 	if(changeInfo.url){
 		chrome.tabs.query({}, function(qtabs) {
-			var dup_chk=qtabs.filter((t)=>{return t.id!=tab.id;}).map((t)=>{return getUrl(t);});
-			var discardFlag=null;
 			var tb_url=changeInfo.url;
+			var dup_chk=[];
+			if(discarded.filter((d)=>{return d[1]==tb_url;}).length==0){
+				dup_chk=qtabs.filter((t)=>{return (t.id!=tab.id && getUrl(t)==tb_url);});
+			}
+			
+			var discardFlag=null;
 			var op_tab_exist=(!!tab.openerTabId && typeof tab.openerTabId!=='undefined')?true:false;
 			let cnt_chk=url_chg_cnt.filter((t)=>{return t[0]==tab.id;});
 			if(cnt_chk.length>0){
