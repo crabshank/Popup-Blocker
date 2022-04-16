@@ -167,7 +167,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 			let cnt_chk=url_chg_cnt.filter((t)=>{return t[0]==tab.id;});
 			if(cnt_chk.length>0){
 				let isBl=blacklistMatch(blacklist,tb_url);
-				let chr_tab=(tb_url.startsWith('chrome://') || tb_url.startsWith('chrome-extension://'))?true:false;
+				let chr_tab=(tb_url.startsWith('chrome://') || tb_url.startsWith('chrome-extension://') || tb_url.startsWith('about:'))?true:false;
 				if(isBl[0] && !chr_tab){
 					chrome.tabs.update(tab.id, {highlighted: false});
 					if(op_tab_exist){
@@ -235,7 +235,7 @@ function windowProc(window){
 				let xmp=false;
 				for (let t = 0; t < tabs.length; t++) {
 					let t_url=getUrl(tabs[t]);
-					let chr_tab=(t_url.startsWith('chrome://') || t_url.startsWith('chrome-extension://'))?true:false;
+					let chr_tab=(t_url.startsWith('chrome://') || t_url.startsWith('chrome-extension://') || t_url.startsWith('about:'))?true:false;
 					let isWl=blacklistMatch(whitelist,t_url);
 					if(chr_tab || isWl[0]){
 						xmp=true;
