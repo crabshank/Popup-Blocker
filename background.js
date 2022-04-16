@@ -238,8 +238,9 @@ function windowProc(window){
 				let xmp=false;
 				for (let t = 0; t < tabs.length; t++) {
 					let t_url=getUrl(tabs[t]);
+					let chr_tab=(t_url.startsWith('chrome://') || t_url.startsWith('chrome-extension://'))?true:false;
 					let isWl=blacklistMatch(whitelist,t_url);
-					if(t_url.startsWith('chrome-extension://') || isWl[0]){
+					if(chr_tab || isWl[0]){
 						xmp=true;
 						break;
 					}
