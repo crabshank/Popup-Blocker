@@ -176,7 +176,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 					chrome.tabs.remove(tab.id);
 				}else{
 					if (op_tab_exist){
-						var lks=tb_links.filter((t)=>{return t[0]==tab.openerTabId && t.slice(1).includes(tb_url);});
+						var lks=tb_links.filter((t)=>{return t[0]==tab.openerTabId && t.slice(1)[0].includes(tb_url);});
 									if(dup_chk.length>0){ //Focus on duplicates
 										chrome.tabs.update(tab.id, {highlighted: true});
 										chrome.tabs.update(tab.openerTabId, {highlighted: false});
