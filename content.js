@@ -1,6 +1,27 @@
 try{
 var timer;
 var chg = window.location.href;
+
+function link_sender(){
+	let lnks= getTagNameShadow(document, 'A').map((lk)=>{return lk.href;});
+	lnks=lnks.filter((lk)=>{return (typeof lk!=='undefined' &&  !!lk && lk!=='');});
+	lnks=Array.from(new Set(lnks));
+	chrome.runtime.sendMessage({
+		type: "links",
+		links: lnks
+	}, function(response) {});
+}
+
+chrome.runtime.onMessage.addListener(
+	function(request, sender, sendResponse) {
+		switch (request.type) {
+			case "checkLinks":
+				link_sender();
+			break;
+			        return true; 
+		}
+	});
+
 function getTagNameShadow(docm, tgn){
 var shrc=[docm];
 var shrc_l=1;
@@ -28,22 +49,10 @@ while(srCnt<shrc_l){
 	return out;
 }
 
-
-
-
-function sender(){
-	let lnks= getTagNameShadow(document, 'A').map((lk)=>{return lk.href;});
-	lnks=lnks.filter((lk)=>{return (typeof lk!=='undefined' &&  !!lk && lk!=='');});
-	chrome.runtime.sendMessage({
-		type: "links",
-		links: lnks
-	}, function(response) {});
-}
-	
-sender();
+link_sender();
 
 if (typeof observer === "undefined" && typeof timer === "undefined") {
-    sender();
+    link_sender();
     const observer = new MutationObserver((mutations) => {
         if (timer) {
             clearTimeout(timer);
@@ -66,7 +75,6 @@ if (typeof observer === "undefined" && typeof timer === "undefined") {
         characterDataOldValue: true
     });
 }
-
 
 
 }catch(e){;}

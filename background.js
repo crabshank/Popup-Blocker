@@ -19,6 +19,10 @@ function removeEls(d, array){
 	return newArray;
 }
 
+function requestLinks(id){
+	chrome.tabs.sendMessage(id, {type:"checkLinks"});
+}
+
 function findIndexTotalInsens(string, substring, index) {
     string = string.toLocaleLowerCase();
     substring = substring.toLocaleLowerCase();
@@ -119,7 +123,8 @@ function save_options()
 var to_discard=[];
 var discarded=[];
 var tb_links=[];
-	
+var url_chg_cnt=[];
+
 function discardTab(id,push){
 				chrome.tabs.discard(id, function(tab){
 						if(push){
@@ -133,6 +138,7 @@ function replaceTabs(r,a){
 	tb_links=tb_links.map((t)=>{return (t[0]==r)?[a,t[1]]:t;});
 	to_discard=to_discard.map((t)=>{return (t[0]==r)?[a,...t.slice(1)]:t;});
 	discarded=discarded.map((d)=>{return (d[0]==r)?[a,...d.slice(1)]:d;});
+	url_chg_cnt=url_chg_cnt.map((t)=>{return (t[0]==r)?[a,t[1]]:t;});
 }
 
 chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
@@ -148,8 +154,61 @@ chrome.tabs.onActivated.addListener(function(tab){
 });
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-	if(changeInfo.status!=='unloaded'){
+	if(changeInfo.url){
+		chrome.tabs.query({}, function(qtabs) {
+			var dup_chk=qtabs.filter((t)=>{return t.id!=tab.id;}).map((t)=>{return getUrl(t);});
+			var discardFlag=null;
+			var tb_url=changeInfo.url;
+			var op_tab_exist=(!!tab.openerTabId && typeof tab.openerTabId!=='undefined')?true:false;
+			let cnt_chk=url_chg_cnt.filter((t)=>{return t[0]==tab.id;});
+			if(cnt_chk.length>0){
+				let isBl=blacklistMatch(blacklist,tb_url);
+				let chr_tab=(tb_url.startsWith('chrome://') || tb_url.startsWith('chrome-extension://'))?true:false;
+				if(isBl[0] && !chr_tab){
+					chrome.tabs.update(tab.id, {highlighted: false});
+					if(op_tab_exist){
+						chrome.tabs.update(tab.openerTabId, {highlighted: true});
+					}
+					chrome.tabs.remove(tab.id);
+				}else{
+					if (op_tab_exist){
+						var lks=tb_links.filter((t)=>{return t[0]==tab.openerTabId && t.slice(1).includes(tb_url);});
+									if(dup_chk.length>0){ //Focus on duplicates
+										chrome.tabs.update(tab.id, {highlighted: true});
+										chrome.tabs.update(tab.openerTabId, {highlighted: false});
+									}else{
+										if(!chr_tab){
+											if(lks.length>0){
+												chrome.tabs.update(tab.id, {highlighted: true});
+												chrome.tabs.update(tab.openerTabId, {highlighted: false});
+											}else{
+												to_discard.push([tab.id,tb_url]);
+												discardFlag=to_discard.length;
+												chrome.tabs.update(tab.openerTabId, {highlighted: true});
+												chrome.tabs.update(tab.id, {highlighted: false})
+											}
+										}	
+									}
+							
+					}
+			}
+			requestLinks(tab.id);
+			url_chg_cnt=url_chg_cnt.filter((t)=>{return t[0]!=tab.id;});
+		}
+			if(!!discardFlag){
+				discardTab(tab.id,true);
+				to_discard=to_discard.filter((t)=>{return t[0]!=tab.id;});
+			}else{
+				requestLinks(tab.id);
+			}
+		
+		});
+	}else if(changeInfo.status!=='unloaded'){
 		discarded=discarded.filter((d)=>{return d[0]!=tab.id;});
+	}
+	
+	if(changeInfo.status==='complete'){
+		requestLinks(tab.id);
 	}
 });
 
@@ -161,101 +220,42 @@ chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 	tb_links=tb_links.filter((t)=>{return t[0]!=tabId;});
 	to_discard=to_discard.filter((t)=>{return t[0]!=tabId;});
 	discarded=discarded.filter((d)=>{return d[0]!=tabId;});
+	url_chg_cnt=url_chg_cnt.filter((t)=>{return t[0]!=tabId;});
 });
 	
 chrome.tabs.onCreated.addListener(function(tab) {
-if (!!tab.openerTabId && typeof tab.openerTabId!=='undefined'){
-					let tbact=tab.active;
-					let tb_url=getUrl(tab);
-					if(tbact && !( tb_url.startsWith('chrome://') || tb_url.startsWith('chrome-extension://')  ) ){
-						chrome.tabs.update(tab.id, {highlighted: false});
-						chrome.tabs.update(tab.openerTabId, {highlighted: true});
-					}else{					
-						chrome.tabs.update(tab.openerTabId, {highlighted: false});
-						chrome.tabs.update(tab.id, {highlighted: true})
-					}
-}	
+	url_chg_cnt.push([tab.id,0]);
 });
 
 function windowProc(window){
+	
 		if (window.type==='popup'){
 		chrome.tabs.query({windowId: window.id}, function(tabs) {
-			let xmp=false;
-			for (let t = 0; t < tabs.length; t++) {
-				let t_url=getUrl(tabs[t]);
-				let isWl=blacklistMatch(whitelist,t_url);
-				if(t_url.startsWith('chrome-extension://') || isWl[0]){
-					xmp=true;
-					break;
-				}
-		}
+				let xmp=false;
+				for (let t = 0; t < tabs.length; t++) {
+					let t_url=getUrl(tabs[t]);
+					let isWl=blacklistMatch(whitelist,t_url);
+					if(t_url.startsWith('chrome-extension://') || isWl[0]){
+						xmp=true;
+						break;
+					}
+			}
 			if(!xmp){
 			chrome.windows.remove(window.id);
+			}else{
+				for (let t = 0; t < tabs.length; t++) {
+					requestLinks(tabs[t].id);
+				}
 			}
-			});
+	});
 	}
+	
 }
-
-function handleDiscard(id,url,chek){
-	if(chek){
-		let chk=to_discard.filter((t)=>{return t[0]==id && t[1]==url;});
-		if(chk.length>0){
-			discardTab(id,true);
-		}
-	}else{
-		discardTab(id,true);
-	}
-	to_discard=to_discard.filter((t)=>{return t[0]!=id;});
-}
-
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, changedTab) {
-	handleDiscard(tabId,changeInfo.url,true);
-});
 
 function handleMessage(request, sender, sendResponse) {
 	if(request.type=="links"){
 		tb_links=tb_links.filter((t)=>{return t[0]!=sender.tab.id;});
 		tb_links.push([sender.tab.id,request.links]);
-		if (!!sender.tab.openerTabId && typeof sender.tab.openerTabId!=='undefined'){
-			chrome.tabs.query({}, function(tabs) {
-				let tbs=tabs.filter((tb)=>{return tb.id==sender.tab.id;});
-				let tbs_URLs=tabs.map((tb)=>{return getUrl(tb);});
-				tbs.forEach((tb)=>{
-					let tb_url=getUrl(tb);
-					//if(tb.active){
-						let lks=tb_links.filter((t)=>{return t[0]==sender.tab.openerTabId;});
-						if(lks.length>0){
-							lks=lks[0][1];
-						}
-						if((lks.includes(tb_url) || (tb_url.startsWith('chrome://')) || (tb_url.startsWith('chrome-extension://')))){
-							chrome.tabs.update(sender.tab.openerTabId, {highlighted: false});
-						}else if(tbs_URLs.filter((u)=>{return u===tb_url;}).length>1 && to_discard.filter((t)=>{return t[1]==tb_url;}).length==0 && discarded.filter((t)=>{return t[1]==tb_url;}).length==0 ){
-							chrome.tabs.update(sender.tab.id, {highlighted: false});
-							chrome.tabs.update(sender.tab.openerTabId, {highlighted: true});
-						}else{
-										
-				var isBl=blacklistMatch(blacklist,tb_url);
-						if(isBl[0]){						
-							chrome.tabs.remove(
-								sender.tab.id,
-								 function(){
-									 chrome.tabs.update(sender.tab.openerTabId, {highlighted: true});
-							});
-						}else{
-							let chk_td=to_discard.filter((t)=>{return t[0]==sender.tab.id && t[1]==tb_url;});
-							if(chk_td.length==0){
-								to_discard.push([sender.tab.id,tb_url]);
-								handleDiscard(sender.tab.id,tb_url,false);
-								chrome.tabs.update(sender.tab.id, {highlighted: false});
-								chrome.tabs.update(sender.tab.openerTabId, {highlighted: true});
-							}
-						}
-							
-						}
-					//}
-				});
-			});
-	}
 	}
 }
 
@@ -263,7 +263,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
  handleMessage(request, sender, sendResponse);
   return true;
 });
-
 
 chrome.windows.onCreated.addListener((window) => {
 	windowProc(window);
