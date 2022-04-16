@@ -182,10 +182,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 										chrome.tabs.update(tab.openerTabId, {highlighted: false});
 									}else{
 										if(!chr_tab){
-											if(lks.length>0){
-												chrome.tabs.update(tab.id, {highlighted: true});
-												chrome.tabs.update(tab.openerTabId, {highlighted: false});
-											}else{
+											if(lks.length==0){
 												to_discard.push([tab.id,tb_url]);
 												discardFlag=to_discard.length;
 												chrome.tabs.update(tab.openerTabId, {highlighted: true});
