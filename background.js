@@ -158,6 +158,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 		chrome.tabs.query({}, function(qtabs) {
 			var tb_url=changeInfo.url;
 			var dup_chk=[];
+			var lks=tb_links.filter((t)=>{return t[0]==tab.openerTabId && t.slice(1)[0].includes(tb_url);});
 			if(discarded.filter((d)=>{return d[1]==tb_url;}).length==0){
 				dup_chk=qtabs.filter((t)=>{return (t.id!=tab.id && getUrl(t)==tb_url);});
 			}
@@ -176,7 +177,6 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 					chrome.tabs.remove(tab.id);
 				}else{
 					if (op_tab_exist){
-						var lks=tb_links.filter((t)=>{return t[0]==tab.openerTabId && t.slice(1)[0].includes(tb_url);});
 									if(dup_chk.length>0){ //Focus on duplicates
 										chrome.tabs.update(tab.id, {highlighted: true});
 										chrome.tabs.update(tab.openerTabId, {highlighted: false});
@@ -256,8 +256,13 @@ function windowProc(window){
 
 function handleMessage(request, sender, sendResponse) {
 	if(request.type=="links"){
-		tb_links=tb_links.filter((t)=>{return t[0]!=sender.tab.id;});
-		tb_links.push([sender.tab.id,request.links]);
+		let tbl=tb_links.findIndex((t)=>{return t[0]==sender.tab.id;});
+		if(tbl>=0){
+			let urls=tb_links[tbl].slice(1)[0];
+			tb_links[tbl][1]=Array.from(new Set([...urls,...request.links]));
+		}else{
+			tb_links.push([sender.tab.id, request.links]);
+		}
 	}
 }
 
