@@ -168,30 +168,33 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 			let cnt_chk=url_chg_cnt.filter((t)=>{return t[0]==tab.id;});
 			if(cnt_chk.length>0){
 				let isBl=blacklistMatch(blacklist,tb_url);
+				let isWl=blacklistMatch(whitelist,tb_url);
 				let chr_tab=(tb_url.startsWith('chrome://') || tb_url.startsWith('chrome-extension://') || tb_url.startsWith('about:'))?true:false;
-				if(isBl[0] && !chr_tab){
-					chrome.tabs.update(tab.id, {highlighted: false});
-					if(op_tab_exist){
-						chrome.tabs.update(tab.openerTabId, {highlighted: true});
-					}
-					chrome.tabs.remove(tab.id);
-				}else{
-					if (op_tab_exist){
-									if(dup_chk.length>0){ //Focus on duplicates
-										chrome.tabs.update(tab.id, {highlighted: true});
-										chrome.tabs.update(tab.openerTabId, {highlighted: false});
-									}else{
-										if(!chr_tab){
-											if(lks.length==0){
-												to_discard.push([tab.id,tb_url]);
-												discardFlag=to_discard.length;
-												chrome.tabs.update(tab.openerTabId, {highlighted: true});
-												chrome.tabs.update(tab.id, {highlighted: false})
-											}
-										}	
-									}
-							
-					}
+				if(!isWl[0]){
+					if(isBl[0] && !chr_tab){
+						chrome.tabs.update(tab.id, {highlighted: false});
+						if(op_tab_exist){
+							chrome.tabs.update(tab.openerTabId, {highlighted: true});
+						}
+						chrome.tabs.remove(tab.id);
+					}else{
+						if (op_tab_exist){
+										if(dup_chk.length>0){ //Focus on duplicates
+											chrome.tabs.update(tab.id, {highlighted: true});
+											chrome.tabs.update(tab.openerTabId, {highlighted: false});
+										}else{
+											if(!chr_tab){
+												if(lks.length==0){
+													to_discard.push([tab.id,tb_url]);
+													discardFlag=to_discard.length;
+													chrome.tabs.update(tab.openerTabId, {highlighted: true});
+													chrome.tabs.update(tab.id, {highlighted: false})
+												}
+											}	
+										}
+								
+						}
+				}
 			}
 			requestLinks(tab.id);
 			url_chg_cnt=url_chg_cnt.filter((t)=>{return t[0]!=tab.id;});
