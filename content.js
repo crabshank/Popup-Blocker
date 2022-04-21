@@ -1,5 +1,5 @@
 try{
-var chg = window.location.href;
+var chg = {u:window.location.href, c:0};
 
 var fr_id=null;
 var tb_id=null;
@@ -58,9 +58,9 @@ function gotMessage(message, sender, sendResponse) {
 		link_sender();
 	}else if(message.message=="nav"){
 		if(message.f_id===fr_id){
-			if(window.location.href!==message.url){
-				chrome.runtime.sendMessage({type: "nav",old_url: chg, new_url: window.location.href}, function(response) {});
-				chg=window.location.href;
+			if((chg.c==0) || (window.location.href!==chg.u && chg.c>0)){
+				chrome.runtime.sendMessage({type: "nav",old_url: chg.u, new_url: window.location.href}, function(response) {});
+				chg.u=window.location.href;
 			}
 			link_sender();
 		}
