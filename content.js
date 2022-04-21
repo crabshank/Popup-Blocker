@@ -61,6 +61,7 @@ function gotMessage(message, sender, sendResponse) {
 			if((chg.c==0) || (window.location.href!==chg.u && chg.c>0)){
 				chrome.runtime.sendMessage({type: "nav",old_url: chg.u, new_url: window.location.href}, function(response) {});
 				chg.u=window.location.href;
+				chg.c++;
 			}
 			link_sender();
 		}
