@@ -16,7 +16,7 @@ async function get_ids(){
 }
 
 function link_sender(){
-	let lnks= getTagNameShadow(document, 'A').filter((lk)=>{return (typeof lk.href!=='undefined' &&  !!lk.href && lk.href!=='');});
+	let lnks= getTagNameShadow(document, 'A').filter((lk)=>{return (!!lk.href && typeof lk.href!=='undefined' && lk.href!=='');});
 	lnks=lnks.map((lk)=>{return lk.href;});
 	lnks=Array.from(new Set(lnks));
 	chrome.runtime.sendMessage({
