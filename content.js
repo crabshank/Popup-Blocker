@@ -1,6 +1,19 @@
 try{
-var timer;
 var chg = window.location.href;
+
+var fr_id=null;
+var tb_id=null;
+
+async function get_ids(){
+	await new Promise(function(resolve, reject) {
+		chrome.runtime.sendMessage({type: "get_info"}, function(response) {
+			fr_id=response.info.frameId;
+			tb_id=response.info.tab.id;
+			link_sender();
+			resolve();
+		});
+	});
+}
 
 function link_sender(){
 	let lnks= getTagNameShadow(document, 'A').filter((lk)=>{return (typeof lk.href!=='undefined' &&  !!lk.href && lk.href!=='');});
@@ -11,16 +24,6 @@ function link_sender(){
 		links: lnks
 	}, function(response) {});
 }
-
-chrome.runtime.onMessage.addListener(
-	function(request, sender, sendResponse) {
-		switch (request.type) {
-			case "checkLinks":
-				link_sender();
-			break;
-			        return true; 
-		}
-	});
 
 function getTagNameShadow(docm, tgn){
 var shrc=[docm];
@@ -49,32 +52,22 @@ while(srCnt<shrc_l){
 	return out;
 }
 
-link_sender();
-
-if (typeof observer === "undefined" && typeof timer === "undefined") {
-    link_sender();
-    const observer = new MutationObserver((mutations) => {
-        if (timer) {
-            clearTimeout(timer);
-        }
-        timer = setTimeout(() => {
-
-            if (window.location.href != chg) {
-	            	chg = window.location.href;
+chrome.runtime.onMessage.addListener(gotMessage);
+function gotMessage(message, sender, sendResponse) {
+	if(message.message=="checkLinks"){
+		link_sender();
+	}else if(message.message=="nav"){
+		if(message.f_id===fr_id){
+			if(window.location.href!==message.url){
+				chrome.runtime.sendMessage({type: "nav",old_url: chg, new_url: window.location.href}, function(response) {});
+				chg=window.location.href;
 			}
-
-        }, 150);
-    });
-
- observer.observe(document, {
-        attributes: true,
-        childList: true,
-        subtree: true,
-        characterData: true,
-        attributeOldValue: true,
-        characterDataOldValue: true
-    });
+			link_sender();
+		}
+	}
+		return true; 
 }
 
+get_ids();
 
 }catch(e){;}

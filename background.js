@@ -153,10 +153,8 @@ chrome.tabs.onActivated.addListener(function(tab){
 	}
 });
 
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-	if(changeInfo.url){
-		chrome.tabs.query({}, function(qtabs) {
-			var tb_url=changeInfo.url;
+function url_upd(tab,tb_url){
+			chrome.tabs.query({}, function(qtabs) {
 			var dup_chk=-1;
 			var lks=tb_links.findIndex((t)=>{return t[0]==tab.openerTabId && t.slice(1)[0].includes(tb_url);});
 			if(discarded.findIndex((d)=>{return d[1]==tb_url;})>=0){
@@ -185,7 +183,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 												chrome.tabs.update(tab.openerTabId, {highlighted: false});
 											}else{
 												if(!chr_tab){
-													if(lks>=0){
+													if(lks<0){
 														to_discard.push([tab.id,tb_url]);
 														discardFlag=to_discard.length;
 														chrome.tabs.update(tab.openerTabId, {highlighted: true});
@@ -215,6 +213,11 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 			}
 		
 		});
+}
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+	if(changeInfo.url){
+		url_upd(tab,changeInfo.url);
 	}else if(changeInfo.status!=='unloaded'){
 		discarded=discarded.filter((d)=>{return d[0]!=tab.id;});
 	}
@@ -266,7 +269,9 @@ function windowProc(window){
 }
 
 function handleMessage(request, sender, sendResponse) {
-	if(request.type=="links"){
+	if(request.type=="get_info"){
+		sendResponse({info: sender});
+	}else if(request.type=="links"){
 		let tbl=tb_links.findIndex((t)=>{return t[0]==sender.tab.id;});
 		if(tbl>=0){
 			let urls=tb_links[tbl].slice(1)[0];
@@ -274,6 +279,8 @@ function handleMessage(request, sender, sendResponse) {
 		}else{
 			tb_links.push([sender.tab.id, request.links]);
 		}
+	}else if(request.type=="nav"){
+		url_upd(sender.tab,request.new_url);
 	}
 }
 
@@ -284,6 +291,18 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
 chrome.windows.onCreated.addListener((window) => {
 	windowProc(window);
+});
+
+chrome.declarativeNetRequest.onRuleMatchedDebug.addListener((info)=>{
+	if(info.request.tabId>=0){
+		chrome.webNavigation.getFrame({
+		tabId: info.request.tabId,
+		frameId: info.request.frameId
+		}, function (frameInfo){
+				  chrome.tabs.sendMessage(info.request.tabId, {message: "nav", url:frameInfo.url, f_id: info.request.frameId});
+		});
+	}
+
 });
 
 restore_options();

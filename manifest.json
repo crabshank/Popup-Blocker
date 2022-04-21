@@ -19,7 +19,16 @@
    "background": {
  "service_worker": "background.js"
   },
-     "permissions": ["tabs", "activeTab","scripting","storage"],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+     "permissions": ["tabs", "activeTab","scripting","storage","declarativeNetRequest","declarativeNetRequestFeedback","webNavigation"],
   "action": {
     "default_icon": "close.png",
 	   "default_title": "Close popup tabs/windows"
