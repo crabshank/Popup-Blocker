@@ -125,10 +125,10 @@ var discarded=[];
 var tb_links=[];
 var url_chg_cnt=[];
 
-function discardTab(id,push){
+function discardTab(id,push,op){
 				chrome.tabs.discard(id, function(tab){
 						if(push){
-							discarded.push([tab.id,getUrl(tab)]);
+							discarded.push([tab.id,getUrl(tab),op]);
 							console.log('Tab '+tab.id+' discarded.');
 						}
 					});
@@ -149,7 +149,8 @@ chrome.tabs.onActivated.addListener(function(tab){
 	let chk=to_discard.filter((t)=>{return t[0]==tab.tabId;});
 	let d=discarded.filter((d)=>{return d[0]==tab.tabId;});
 	if(d.length>0 && chk.length==0){
-		discardTab(tab.tabId,false);
+		let op_tab_exist=(!!tab.openerTabId && typeof tab.openerTabId!=='undefined')?true:false;
+		discardTab(tab.tabId,false,(op_tab_exist)?tab.openerTabId:null);
 	}
 });
 
@@ -184,7 +185,7 @@ function url_upd(tab,tb_url){
 											}else{
 												if(!chr_tab){
 													if(lks<0){
-														to_discard.push([tab.id,tb_url]);
+														to_discard.push([tab.id,tb_url,tab.openerTabId]);
 														discardFlag=to_discard.length;
 														chrome.tabs.update(tab.openerTabId, {highlighted: true});
 														chrome.tabs.update(tab.id, {highlighted: false})
@@ -206,7 +207,7 @@ function url_upd(tab,tb_url){
 			url_chg_cnt.push([tab.id,0]);
 		}
 			if(!!discardFlag){
-				discardTab(tab.id,true);
+				discardTab(tab.id,true,(op_tab_exist)?tab.openerTabId:null);
 				to_discard=to_discard.filter((t)=>{return t[0]!=tab.id;});
 			}else{
 				requestLinks(tab.id);
@@ -278,6 +279,20 @@ function handleMessage(request, sender, sendResponse) {
 			tb_links[tbl][1]=Array.from(new Set([...urls,...request.links]));
 		}else{
 			tb_links.push([sender.tab.id, request.links]);
+		}
+		let op_tab_exist=(!!sender.tab.openerTabId && typeof sender.tab.openerTabId!=='undefined')?true:false;
+		if(op_tab_exist){
+			
+			let tdsc_ix=to_discard.findIndex((d)=>{return (d[0]===sender.tab.id && d[1]===getUrl(sender.tab) && d[0]===sender.tab.openerTabId);});
+			if(tdsc_ix>=0){
+					to_discard=to_discard.filter((d,index)=>{return index!=dsc_ix});
+			}
+			
+				let dsc_ix=discarded.findIndex((d)=>{return (d[0]===sender.tab.id && d[1]===getUrl(sender.tab) && d[0]===sender.tab.openerTabId);});
+				if(dsc_ix>=0){
+						discarded=discarded.filter((d,index)=>{return index!=dsc_ix});
+				}
+				
 		}
 	}else if(request.type=="nav"){
 		url_upd(sender.tab,request.new_url);
