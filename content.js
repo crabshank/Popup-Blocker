@@ -4,7 +4,7 @@ var chg = {u:window.location.href, c:0};
 var fr_id=null;
 var tb_id=null;
 var mid_up=false;
-function key_mouse_up(event){
+function key_down_mouse_up(event){
 	if(!mid_up){
 		mid_up=true;
 		let t=event.path.filter((p)=>{return p.tagName==='A'});
@@ -43,8 +43,10 @@ async function get_ids(){
 			fr_id=response.info.frameId;
 			tb_id=response.info.tab.id;
 			link_sender();
-			window.addEventListener('mouseup',key_mouse_up,{capture: true, passive:false});
-			window.addEventListener('mouseup',key_mouse_up,{capture: false, passive:false});
+			window.addEventListener('mouseup',key_down_mouse_up,{capture: true, passive:false});
+			window.addEventListener('mouseup',key_down_mouse_up,{capture: false, passive:false});
+			window.addEventListener('keydown',key_down_mouse_up,{capture: true, passive:false});
+			window.addEventListener('keydown',key_down_mouse_up,{capture: false, passive:false});
 			resolve();
 		});
 	});
