@@ -3,38 +3,29 @@ var chg = {u:window.location.href, c:0};
 
 var fr_id=null;
 var tb_id=null;
-var mid_up=false;
-function key_down_mouse_up(event){
-	if(!mid_up){
-		mid_up=true;
-		let t=event.path.filter((p)=>{return p.tagName==='A'});
+
+function altLinks(lk_arr){
+
 		let lks=[];
 		
-	for (let k=0, len=t.length; k<len; k++){
-		if(!!t[k].href && typeof t[k].href!=='undefined' && t[k].href!==''){
-			let h=t[k].href;
-			lks.push(h);
+	for (let k=0, len=lk_arr.length; k<len; k++){
+			let h=lk_arr[k];
 			
 			if(h.includes('https%3A%2F%2F')){
-				let s=t[0].href.split('https%3A%2F%2F');
+				let s=h.split('https%3A%2F%2F');
 				lks.push('https://'+s.slice(1).join('https%3A%2F%2F'));
 				lks.push(decodeURIComponent('https://'+s[1].split('&')[0]));
 				lks.push(decodeURIComponent('https://'+s[1].split(';')[0]));
 			}else if(h.includes('http%3A%2F%2F')){
-				let s=t[0].href.split('http%3A%2F%2F');
+				let s=h.split('http%3A%2F%2F');
 				lks.push('http://'+s.slice(1).join('http%3A%2F%2F'));
 				lks.push(decodeURIComponent('http://'+s[1].split('&')[0]));
 				lks.push(decodeURIComponent('http://'+s[1].split(';')[0]));
 			}
-		}
 	}
-			//lks=Array.from(new Set(lks));
-			chrome.runtime.sendMessage({
-				type: "links",
-				links: lks
-			}, function(response) {});
-			mid_up=false;
-		}
+	
+	return lks;
+
 }
 
 async function get_ids(){
@@ -43,10 +34,6 @@ async function get_ids(){
 			fr_id=response.info.frameId;
 			tb_id=response.info.tab.id;
 			link_sender();
-			window.addEventListener('mouseup',key_down_mouse_up,{capture: true, passive:false});
-			window.addEventListener('mouseup',key_down_mouse_up,{capture: false, passive:false});
-			window.addEventListener('keydown',key_down_mouse_up,{capture: true, passive:false});
-			window.addEventListener('keydown',key_down_mouse_up,{capture: false, passive:false});
 			resolve();
 		});
 	});
@@ -55,7 +42,9 @@ async function get_ids(){
 function link_sender(){
 	let lnks= getTagNameShadow(document, 'A').filter((lk)=>{return (!!lk.href && typeof lk.href!=='undefined' && lk.href!=='');});
 	lnks=lnks.map((lk)=>{return lk.href;});
-	//lnks=Array.from(new Set(lnks));
+
+	lnks.push(...altLinks(lnks));
+
 	chrome.runtime.sendMessage({
 		type: "links",
 		links: lnks
