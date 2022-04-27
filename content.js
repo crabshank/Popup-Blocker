@@ -3,6 +3,7 @@ var chg = {u:window.location.href, c:0};
 
 var fr_id=null;
 var tb_id=null;
+var mid_up=false;
 
 function altLinks(lk_arr){
 
@@ -28,12 +29,37 @@ function altLinks(lk_arr){
 
 }
 
+function key_down_mouse_down(event){
+	if(!mid_up){
+		mid_up=true;
+		let t=event.path.filter((p)=>{return p.tagName==='A'});
+		let lks=[];
+		
+		for (let k=0, len=t.length; k<len; k++){
+			if(!!t[k].href && typeof t[k].href!=='undefined' && t[k].href!==''){
+				let h=t[k].href;
+				let lks=[h,...altLinks([h])];
+				//lks=Array.from(new Set(lks));
+				chrome.runtime.sendMessage({
+					type: "links",
+					links: lks
+				}, function(response) {});
+			}
+		}
+		mid_up=false;
+	}
+}
+
 async function get_ids(){
 	await new Promise(function(resolve, reject) {
 		chrome.runtime.sendMessage({type: "get_info"}, function(response) {
 			fr_id=response.info.frameId;
 			tb_id=response.info.tab.id;
 			link_sender();
+			window.addEventListener('pointerdown',key_down_mouse_down,{capture: true, passive:false});
+			window.addEventListener('pointerdown',key_down_mouse_down,{capture: false, passive:false});
+			window.addEventListener('keydown',key_down_mouse_down,{capture: true, passive:false});
+			window.addEventListener('keydown',key_down_mouse_down,{capture: false, passive:false});
 			resolve();
 		});
 	});
