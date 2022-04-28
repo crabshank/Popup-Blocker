@@ -32,20 +32,22 @@ function altLinks(lk_arr){
 function key_down_mouse_down(event){
 	if(!mid_up){
 		mid_up=true;
-		let t=event.path.filter((p)=>{return p.tagName==='A'});
-		let lks=[];
+		var lks=event.path.filter((p)=>{return (p.tagName==='A' && p.href && typeof p.href!=='undefined' && p.href!=='');});
+		var out=[];
 		
-		for (let k=0, len=t.length; k<len; k++){
-			if(!!t[k].href && typeof t[k].href!=='undefined' && t[k].href!==''){
-				let h=t[k].href;
-				let lks=[h,...altLinks([h])];
-				//lks=Array.from(new Set(lks));
-				chrome.runtime.sendMessage({
+		if(lks.length>0){
+			var lks_m=lks.map((k)=>{return k.href;});
+			
+			lks_m.forEach((lk)=>{
+				out.push(lk);
+				out.push(...altLinks([lk]));
+			});
+
+			chrome.runtime.sendMessage({
 					type: "links",
-					links: lks
+					links: out
 				}, function(response) {});
 			}
-		}
 		mid_up=false;
 	}
 }
