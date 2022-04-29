@@ -30,26 +30,28 @@ function altLinks(lk_arr){
 }
 
 function key_down_mouse_down(event){
-	if(!mid_up){
-		mid_up=true;
-		var lks=event.path.filter((p)=>{return (p.tagName==='A' && p.href && typeof p.href!=='undefined' && p.href!=='');});
-		var out=[];
-		
-		if(lks.length>0){
-			var lks_m=lks.map((k)=>{return k.href;});
+	try{
+		if(!mid_up){
+			mid_up=true;
+			var lks=event.path.filter((p)=>{return (p.tagName==='A' && p.href && typeof p.href!=='undefined' && p.href!=='');});
+			var out=[];
 			
-			lks_m.forEach((lk)=>{
-				out.push(lk);
-				out.push(...altLinks([lk]));
-			});
+			if(lks.length>0){
+				var lks_m=lks.map((k)=>{return k.href;});
+				
+				lks_m.forEach((lk)=>{
+					out.push(lk);
+					out.push(...altLinks([lk]));
+				});
 
-			chrome.runtime.sendMessage({
-					type: "links",
-					links: out
-				}, function(response) {});
-			}
-		mid_up=false;
-	}
+				chrome.runtime.sendMessage({
+						type: "links",
+						links: out
+					}, function(response) {});
+				}
+			mid_up=false;
+		}
+	}catch(e){mid_up=false;}
 }
 
 async function get_ids(){
