@@ -166,7 +166,7 @@ function url_upd(tab,tb_url){
 			var cnt_chk=url_chg_cnt.findIndex((t)=>{return t[0]==tab.id;});
 			var lk_ix=tb_links.findIndex((t)=>{return t[0]==tab.id;});
 			if(cnt_chk>=0){
-						let u_len=url_chg_cnt[cnt_chk][2].length;
+				let u_len=url_chg_cnt[cnt_chk][2].length;
 				if(u_len>=10){ // keep last 10 URLs
 					url_chg_cnt[cnt_chk][2]=url_chg_cnt[cnt_chk][2].slice(u_len-10+1);
 				}			
