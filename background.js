@@ -300,8 +300,9 @@ function handleMessage(request, sender, sendResponse) {
 }
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
- handleMessage(request, sender, sendResponse);
-  return true;
+	handleMessage(request, sender, sendResponse);
+	Promise.resolve("").then(result => sendResponse(result));
+	return true;
 });
 
 chrome.windows.onCreated.addListener((window) => {
@@ -314,7 +315,9 @@ chrome.declarativeNetRequest.onRuleMatchedDebug.addListener((info)=>{
 		tabId: info.request.tabId,
 		frameId: info.request.frameId
 		}, function (frameInfo){
+			if(!!frameInfo){
 				  chrome.tabs.sendMessage(info.request.tabId, {message: "nav", url:frameInfo.url, f_id: info.request.frameId});
+			}
 		});
 	}
 
