@@ -138,7 +138,7 @@ function replaceTabs(r,a){
 	tb_links=tb_links.map((t)=>{return (t[0]==r)?[a,t[1]]:t;});
 	to_discard=to_discard.map((t)=>{return (t[0]==r)?[a,...t.slice(1)]:t;});
 	discarded=discarded.map((d)=>{return (d[0]==r)?[a,...d.slice(1)]:d;});
-	url_chg_cnt=url_chg_cnt.map((t)=>{return (t[0]==r)?[a,t[1]]:t;});
+	url_chg_cnt=url_chg_cnt.map((t)=>{return (t[0]==r)?[a,...t.slice(1)]:t;});
 }
 
 chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
@@ -166,6 +166,13 @@ function url_upd(tab,tb_url){
 			var cnt_chk=url_chg_cnt.findIndex((t)=>{return t[0]==tab.id;});
 			var lk_ix=tb_links.findIndex((t)=>{return t[0]==tab.id;});
 			if(cnt_chk>=0){
+						let u_len=url_chg_cnt[cnt_chk][2].length;
+				if(u_len>=10){ // keep last 10 URLs
+					url_chg_cnt[cnt_chk][2]=url_chg_cnt[cnt_chk][2].slice(u_len-10+1);
+				}			
+				url_chg_cnt[cnt_chk][2].push(tb_url);
+				
+				
 				if(url_chg_cnt[cnt_chk][1]==0){
 					let isBl=blacklistMatch(blacklist,tb_url);
 					let isWl=blacklistMatch(whitelist,tb_url);
@@ -184,7 +191,12 @@ function url_upd(tab,tb_url){
 												chrome.tabs.update(tab.openerTabId, {highlighted: false});
 											}else{
 												if(!chr_tab){
-													if(lks<0){
+													var op_cnt_chk=url_chg_cnt.findIndex((t)=>{return t[0]==tab.openerTabId;});
+													var in_op_hist=false;
+													if(op_cnt_chk>=0){
+														in_op_hist=(url_chg_cnt[op_cnt_chk][2].includes(tb_url))?true:false;
+													}
+													if(lks<0 && !in_op_hist){
 														to_discard.push([tab.id,tb_url,tab.openerTabId]);
 														discardFlag=to_discard.length;
 														chrome.tabs.update(tab.openerTabId, {highlighted: true});
@@ -204,7 +216,7 @@ function url_upd(tab,tb_url){
 			requestLinks(tab.id);
 			url_chg_cnt[cnt_chk][1]+=1;
 		}else{
-			url_chg_cnt.push([tab.id,0]);
+			url_chg_cnt.push([tab.id,0,[tb_url]]);
 		}
 			if(!!discardFlag){
 				discardTab(tab.id,true,(op_tab_exist)?tab.openerTabId:null);
@@ -240,7 +252,7 @@ chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 });
 	
 chrome.tabs.onCreated.addListener(function(tab) {
-	url_chg_cnt.push([tab.id,0]);
+	url_chg_cnt.push([tab.id,0,[]]);
 });
 
 function windowProc(window){
