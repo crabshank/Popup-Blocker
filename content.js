@@ -33,7 +33,7 @@ function key_down_mouse_down(event){
 	try{
 		if(!mid_up){
 			mid_up=true;
-			var lks=event.path.filter((p)=>{return (p.tagName==='A' && p.href && typeof p.href!=='undefined' && p.href!=='');});
+			var lks=event.composedPath().filter((p)=>{return (p.tagName==='A' && p.href && typeof p.href!=='undefined' && p.href!=='');});
 			var out=[];
 			
 			if(lks.length>0){
