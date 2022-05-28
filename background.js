@@ -315,7 +315,7 @@ function handleMessage(request, sender, sendResponse) {
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 	handleMessage(request, sender, sendResponse);
-	return true;
+	sendResponse({response: "Message received"});
 });
 
 chrome.windows.onCreated.addListener((window) => {
