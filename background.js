@@ -284,9 +284,7 @@ function windowProc(window){
 }
 
 function handleMessage(request, sender, sendResponse) {
-	let sr=true;
 	if(request.type=="get_info"){
-		sr=false;
 		sendResponse({info: sender});
 	}else if(request.type=="links"){
 		let tbl=tb_links.findIndex((t)=>{return t[0]==sender.tab.id;});
@@ -310,11 +308,9 @@ function handleMessage(request, sender, sendResponse) {
 				}
 				
 		}
+		sendResponse({response: "Message received"});
 	}else if(request.type=="nav"){
 		url_upd(sender.tab,request.new_url);
-	}
-	
-	if(sr){
 		sendResponse({response: "Message received"});
 	}
 }
