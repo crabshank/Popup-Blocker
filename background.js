@@ -159,10 +159,17 @@ chrome.tabs.onActivated.addListener(function(tab){
 function url_upd(tab,tb_url){
 			chrome.tabs.query({}, function(qtabs) {
 			var dup_chk=-1;
+			var op_ix=-1;
+			var op_url='';
+
 			var lks=tb_links.findIndex((t)=>{return t[0]==tab.openerTabId && t.slice(1)[0].includes(tb_url);});
 			if(discarded.findIndex((d)=>{return d[1]==tb_url;})>=0){
 				dup_chk=qtabs.findIndex((t)=>{return (t.id!=tab.id && getUrl(t)==tb_url);});
 			}		
+			op_ix=qtabs.findIndex((t)=>{return t==tab.openerTabId);});
+			if(op_ix>=0){
+				op_url=getUrl(qtabs[op_ix]);
+			}
 			var discardFlag=null;
 			var op_tab_exist=(!!tab.openerTabId && typeof tab.openerTabId!=='undefined')?true:false;
 			var cnt_chk=url_chg_cnt.findIndex((t)=>{return t[0]==tab.id;});
@@ -177,7 +184,7 @@ function url_upd(tab,tb_url){
 				
 				if(url_chg_cnt[cnt_chk][1]==0){
 					let isBl=blacklistMatch(blacklist,tb_url);
-					let isWl=blacklistMatch(whitelist,tb_url);
+					let isWl=(blacklistMatch(whitelist,tb_url) || (op_url!=='' && blacklistMatch(whitelist,op_url)) );
 					let chr_tab=(tb_url.startsWith('chrome://') || tb_url.startsWith('chrome-extension://') ||  (tb_url.startsWith('about:') && tb_url!=='about:blank') )?true:false;
 					if(!isWl[0]){
 						if(isBl[0] && !chr_tab){
