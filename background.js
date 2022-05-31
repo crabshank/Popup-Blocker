@@ -166,7 +166,7 @@ function url_upd(tab,tb_url){
 			if(discarded.findIndex((d)=>{return d[1]==tb_url;})>=0){
 				dup_chk=qtabs.findIndex((t)=>{return (t.id!=tab.id && getUrl(t)==tb_url);});
 			}		
-			op_ix=qtabs.findIndex((t)=>{return t==tab.openerTabId);});
+			op_ix=qtabs.findIndex((t)=>{return t==tab.openerTabId;});
 			if(op_ix>=0){
 				op_url=getUrl(qtabs[op_ix]);
 			}
