@@ -184,9 +184,10 @@ function url_upd(tab,tb_url){
 				
 				if(url_chg_cnt[cnt_chk][1]==0){
 					let isBl=blacklistMatch(blacklist,tb_url);
-					let isWl=(blacklistMatch(whitelist,tb_url) || (op_url!=='' && blacklistMatch(whitelist,op_url)) );
+					let isWl=blacklistMatch(whitelist,tb_url);
+					let isWl2=blacklistMatch(whitelist,op_url);
 					let chr_tab=(tb_url.startsWith('chrome://') || tb_url.startsWith('chrome-extension://') ||  (tb_url.startsWith('about:') && tb_url!=='about:blank') )?true:false;
-					if(!isWl[0]){
+					if(!isWl[0] && !isWl2[0]){
 						if(isBl[0] && !chr_tab){
 							chrome.tabs.update(tab.id, {highlighted: false});
 							if(op_tab_exist){
