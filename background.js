@@ -236,6 +236,8 @@ function url_upd(tab,tb_url){
 				if(!tab.discarded){
 					to_discard=to_discard.filter((t)=>{return t[0]!=tab.id;});
 					discardTab(tab.id,true,(op_tab_exist)?tab.openerTabId:null);
+				}else{
+					discarded.push([tab.id,getUrl(tab),(op_tab_exist)?tab.openerTabId:null]);
 				}
 			}else{
 				requestLinks(tab.id);
