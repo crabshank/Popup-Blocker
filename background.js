@@ -151,8 +151,12 @@ chrome.tabs.onActivated.addListener(function(tab){
 	let chk=to_discard.filter((t)=>{return t[0]==tab.tabId;});
 	let d=discarded.filter((d)=>{return d[0]==tab.tabId;});
 	if(d.length>0 && chk.length==0){
-		let op_tab_exist=(!!tab.openerTabId && typeof tab.openerTabId!=='undefined')?true:false;
-		discardTab(tab.tabId,false,(op_tab_exist)?tab.openerTabId:null);
+		chrome.tabs.get(tab.tabId, function(tab2){
+				let op_tab_exist=(!!tab2.openerTabId && typeof tab2.openerTabId!=='undefined')?true:false;
+				if(!tab2.discarded){
+					discardTab(tab.tabId,false,(op_tab_exist)?tab2.openerTabId:null);
+				}
+		 });
 	}
 });
 
@@ -229,8 +233,10 @@ function url_upd(tab,tb_url){
 			url_chg_cnt.push([tab.id,0,[tb_url]]);
 		}
 			if(!!discardFlag){
-				discardTab(tab.id,true,(op_tab_exist)?tab.openerTabId:null);
-				to_discard=to_discard.filter((t)=>{return t[0]!=tab.id;});
+				if(!tab.discarded){
+					to_discard=to_discard.filter((t)=>{return t[0]!=tab.id;});
+					discardTab(tab.id,true,(op_tab_exist)?tab.openerTabId:null);
+				}
 			}else{
 				requestLinks(tab.id);
 			}
