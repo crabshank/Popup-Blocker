@@ -126,14 +126,14 @@ var tb_links=[];
 var url_chg_cnt=[];
 
 function discardTab(id,push,op){
-	try{
 				chrome.tabs.discard(id, function(tab){
-						if(push){
-							discarded.push([tab.id,getUrl(tab),op]);
-							console.log('Tab '+tab.id+' discarded.');
+						if(!!tab && typeof tab !== 'undefined'){
+							if(push){
+								discarded.push([tab.id,getUrl(tab),op]);
+								console.log('Tab '+tab.id+' discarded.');
+							}
 						}
 					});
-	}catch(e){console.error(e);}
 }
 
 function replaceTabs(r,a){
