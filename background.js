@@ -270,7 +270,12 @@ chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 });
 	
 chrome.tabs.onCreated.addListener(function(tab) {
-	url_chg_cnt.push([tab.id,0,[]]);
+	let tu=getUrl(tab);
+	if(!!tu && typeof tu!=="undefined" && tu!==""){
+		url_chg_cnt.push([tab.id,1,[tu]]);
+	}else{
+		url_chg_cnt.push([tab.id,0,[]]);
+	}
 });
 
 function windowProc(window){
