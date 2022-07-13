@@ -186,7 +186,7 @@ function url_upd(tab,tb_url){
 				url_chg_cnt[cnt_chk][2].push(tb_url);
 				
 				
-				if(url_chg_cnt[cnt_chk][1]==0){
+				if(url_chg_cnt[cnt_chk][1]==0){ //First known url for tab
 					let isBl=blacklistMatch(blacklist,tb_url);
 					let isWl=blacklistMatch(whitelist,tb_url);
 					let isWl2=blacklistMatch(whitelist,op_url);
@@ -272,7 +272,7 @@ chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 chrome.tabs.onCreated.addListener(function(tab) {
 	let tu=getUrl(tab);
 	if(!!tu && typeof tu!=="undefined" && tu!==""){
-		url_chg_cnt.push([tab.id,1,[tu]]);
+		 url_upd(tab,tu);
 	}else{
 		url_chg_cnt.push([tab.id,0,[]]);
 	}
