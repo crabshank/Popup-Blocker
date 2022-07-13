@@ -271,10 +271,9 @@ chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 	
 chrome.tabs.onCreated.addListener(function(tab) {
 	let tu=getUrl(tab);
+	url_chg_cnt.push([tab.id,0,[]]);
 	if(!!tu && typeof tu!=="undefined" && tu!==""){
 		 url_upd(tab,tu);
-	}else{
-		url_chg_cnt.push([tab.id,0,[]]);
 	}
 });
 
