@@ -303,7 +303,7 @@ async function windowProc(window){
 					}
 			}
 			if(!xmp){
-				chrome.windows.remove(window.id).finally(()=>{resolve();});
+				chrome.windows.remove(window.id,()=>{;});
 			}else{
 				for (let t = 0; t < tabs.length; t++) {
 					requestLinks(tabs[t].id);
