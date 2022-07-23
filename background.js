@@ -155,7 +155,7 @@ chrome.tabs.onActivated.addListener(function(tab){
 	let d=discarded.filter((d)=>{return d[0]==tab.tabId;});
 	if(d.length>0 && chk.length==0){
 		chrome.tabs.get(tab.tabId, function(tab2){
-				let op_tab_exist=(!!tab2.openerTabId && typeof tab2.openerTabId!=='undefined')?true:false;
+				let op_tab_exist=(tab2.openerTabId!==null && typeof tab2.openerTabId!=='undefined')?true:false;
 				if(!tab2.discarded){
 					discardTab(tab.tabId,false,(op_tab_exist)?tab2.openerTabId:null);
 				}
@@ -178,7 +178,7 @@ function url_upd(tab,tb_url){
 				op_url=getUrl(qtabs[op_ix]);
 			}
 			var discardFlag=null;
-			var op_tab_exist=(!!tab.openerTabId && typeof tab.openerTabId!=='undefined')?true:false;
+			var op_tab_exist=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?true:false;
 			var cnt_chk=url_chg_cnt.findIndex((t)=>{return t[0]==tab.id;});
 			var lk_ix=tb_links.findIndex((t)=>{return t[0]==tab.id;});
 			if(cnt_chk>=0){
@@ -326,7 +326,7 @@ function handleMessage(request, sender, sendResponse) {
 		}else{
 			tb_links.push([sender.tab.id, request.links]);
 		}
-		let op_tab_exist=(!!sender.tab.openerTabId && typeof sender.tab.openerTabId!=='undefined')?true:false;
+		let op_tab_exist=(sender.tab.openerTabId!==null && typeof sender.tab.openerTabId!=='undefined')?true:false;
 		if(op_tab_exist){
 			
 			let tdsc_ix=to_discard.findIndex((d)=>{return (d[0]===sender.tab.id && d[1]===getUrl(sender.tab) && d[0]===sender.tab.openerTabId);});
