@@ -311,7 +311,6 @@ await new Promise(function(resolve, reject) {
 }
 	
 chrome.webNavigation.onCommitted.addListener((details) => {
-	if(details.frameId===0){
 			
 		let tq=arr_match(details.transitionQualifiers,["server_redirect"]);
 		let tt=(["typed","auto_bookmark","manual_subframe","start_page","form_submit","reload","keyword","keyword_generated"].includes(details.transitionType))?true:false;
@@ -323,17 +322,13 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 				ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
 		}
 			
-
-			
-			
-			 if(vu && !chr_tab){
+			 if( vu && ( ( ix>=0 && details.frameId===0) || (ix<0 && !chr_tab) ) ){
 				 	tabAdd(details.tabId,du);
 					if( tq || !tt ){
 						tabDiscrd(details);
 					}
 			 }
-			
-	}
+
 });
 
 restore_options();
