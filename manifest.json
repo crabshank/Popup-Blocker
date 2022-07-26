@@ -3,10 +3,6 @@
   "name": "Popup closer",
   "version": "2022.7",
     "options_page":  "options.html",
-    "web_accessible_resources": [{
-  "resources": ["content.js"],
-  "matches": ["<all_urls>"]
-}],
    "background": {
  "service_worker": "background.js"
   },
