@@ -3,16 +3,6 @@
   "name": "Popup closer",
   "version": "2022.7",
     "options_page":  "options.html",
-      "content_scripts": [
-    {
-	      "all_frames": true,
-      "matches": [
-        "<all_urls>"
-      ],
-	  "run_at":    "document_start",
-      "js": ["content.js"]
-    }
-  ],
     "web_accessible_resources": [{
   "resources": ["content.js"],
   "matches": ["<all_urls>"]
@@ -20,16 +10,7 @@
    "background": {
  "service_worker": "background.js"
   },
-  "declarative_net_request": {
-    "rule_resources": [
-      {
-        "id": "1",
-        "enabled": true,
-        "path": "rules.json"
-      }
-    ]
-  },
-     "permissions": ["tabs", "activeTab","scripting","storage","declarativeNetRequest","declarativeNetRequestFeedback","webNavigation"],
+     "permissions": ["tabs", "activeTab","scripting","storage","webNavigation"],
   "action": {
     "default_icon": "close.png",
 	   "default_title": "Close popup tabs/windows"

@@ -6,6 +6,13 @@ try {
 
 var blacklist=[];
 var whitelist=[];
+var ac_tab=-1;
+chrome.tabs.query({active: true, currentWindow:true},(tabs)=>{ if (!chrome.runtime.lastError) {
+	ac_tab=tabs[0].id;
+}});
+
+var tbo=JSON.stringify({id:-1, op_id:-2, og_url:'',urls:[], op_url:''});
+var tbs=[];
 
 function removeEls(d, array){
 	var newArray = [];
@@ -19,8 +26,17 @@ function removeEls(d, array){
 	return newArray;
 }
 
-function requestLinks(id){
-	chrome.tabs.sendMessage(id, {type:"checkLinks"});
+function arr_match(a,b){
+	let m=false;
+	if(a.length>0 && b.length>0){
+		for (let i = 0, len=b.length; i < len; i++){
+			if(a.includes(b[i])){
+				m=true;
+				break;
+			}
+		}
+	}
+	return m;
 }
 
 function findIndexTotalInsens(string, substring, index) {
@@ -120,172 +136,91 @@ function save_options()
 
 }
 
-var to_discard=[];
-var discarded=[];
-var tb_links=[];
-var url_chg_cnt=[];
 
-async function discardTab(id,push,op){
+function initialise(){
+	chrome.tabs.query({}, function(tabs) { if (!chrome.runtime.lastError) {
+		for (let t = 0; t < tabs.length; t++) {
+				let tu=getUrl(tabs[t]);
+				let chr_tab=(tu.startsWith('chrome://') || tu.startsWith('chrome-extension://') ||  (tu.startsWith('about:') && tu!=='about:blank') )?true:false;
+				if(!!tu && typeof tu!=="undefined" && tu!=="" && !chr_tab){
+					url_chk(tabs[t],tu);
+				}
+			}
+		}});
+}
+
+async function tabs_remove(d){
 	await new Promise(function(resolve, reject) {
-				chrome.tabs.discard(id, function(tab){
-						if(!!tab && typeof tab !== 'undefined'){
-							if(push){
-								discarded.push([tab.id,getUrl(tab),op]);
-								console.log('Tab '+tab.id+' discarded.');
-							}
-						}
+			chrome.tabs.remove(d, ()=>{
+				resolve();
+			});
+	});
+}
+async function tabs_update(d, obj){
+	await new Promise(function(resolve, reject) {
+			chrome.tabs.update(d, obj, (tab)=>{
+				resolve();
+			});
+	});
+}
+
+async function tabs_discard(d){
+	await new Promise(function(resolve, reject) {
+		if(ac_tab!==-1 && ac_tab!==d){
+				chrome.tabs.discard(d, function(tab){
 						resolve();
-					});
+				});
+		}
 	});
 }
 
 function replaceTabs(r,a){
-	tb_links=tb_links.map((t)=>{return (t[0]==r)?[a,t[1]]:t;});
-	to_discard=to_discard.map((t)=>{return (t[0]==r)?[a,...t.slice(1)]:t;});
-	discarded=discarded.map((d)=>{return (d[0]==r)?[a,...d.slice(1)]:d;});
-	url_chg_cnt=url_chg_cnt.map((t)=>{return (t[0]==r)?[a,...t.slice(1)]:t;});
+	let ix=tbs.findIndex((t)=>{return t.id===r;}); if(ix>=0){
+		tbs[ix].id=a;
+	}
 }
 
 chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
 	replaceTabs(removedTabId,addedTabId);
 });
 
-chrome.tabs.onActivated.addListener(function(tab){
-	let chk=to_discard.filter((t)=>{return t[0]==tab.tabId;});
-	let d=discarded.filter((d)=>{return d[0]==tab.tabId;});
-	if(d.length>0 && chk.length==0){
-		chrome.tabs.get(tab.tabId, function(tab2){
-				let op_tab_exist=(tab2.openerTabId!==null && typeof tab2.openerTabId!=='undefined')?true:false;
-				if(!tab2.discarded){
-					discardTab(tab.tabId,false,(op_tab_exist)?tab2.openerTabId:null);
-				}
-		 });
-	}
-});
-
-function url_upd(tab,tb_url){
-			chrome.tabs.query({}, function(qtabs) {
-			var dup_chk=-1;
-			var op_ix=-1;
-			var op_url='';
-
-			var lks=tb_links.findIndex((t)=>{return t[0]==tab.openerTabId && t.slice(1)[0].includes(tb_url);});
-			if(discarded.findIndex((d)=>{return d[1]==tb_url;})>=0){
-				dup_chk=qtabs.findIndex((t)=>{return (t.id!=tab.id && getUrl(t)==tb_url);});
-			}		
-			op_ix=qtabs.findIndex((t)=>{return t.id==tab.openerTabId;});
-			if(op_ix>=0){
-				op_url=getUrl(qtabs[op_ix]);
-			}
-			var discardFlag=null;
-			var op_tab_exist=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?true:false;
-			var cnt_chk=url_chg_cnt.findIndex((t)=>{return t[0]==tab.id;});
-			var lk_ix=tb_links.findIndex((t)=>{return t[0]==tab.id;});
-			if(cnt_chk>=0){
-				let u_len=url_chg_cnt[cnt_chk][2].length;
-				if(u_len>=10){ // keep last 10 URLs
-					url_chg_cnt[cnt_chk][2]=url_chg_cnt[cnt_chk][2].slice(u_len-10+1);
-				}			
-				url_chg_cnt[cnt_chk][2].push(tb_url);
-				
-				
-				if(url_chg_cnt[cnt_chk][1]==0){ //First known url for tab
-					let isBl=blacklistMatch(blacklist,tb_url);
-					let isWl=blacklistMatch(whitelist,tb_url);
-					let isWl2=blacklistMatch(whitelist,op_url);
-					let chr_tab=(tb_url.startsWith('chrome://') || tb_url.startsWith('chrome-extension://') ||  (tb_url.startsWith('about:') && tb_url!=='about:blank') )?true:false;
-					if(!isWl[0] && !isWl2[0]){
-						if(isBl[0] && !chr_tab){
-							chrome.tabs.update(tab.id, {highlighted: false},(tab2)=>{
-								if(op_tab_exist){
-									chrome.tabs.update(tab.openerTabId, {highlighted: true}, (tab3)=>{
-										chrome.tabs.remove(tab.id);
-									});
-								}else{
-									chrome.tabs.remove(tab.id);
-								}
-							});
-						}else{
-							if (op_tab_exist){
-											if(dup_chk>=0){ //Focus on duplicates
-											
-											chrome.tabs.update(tab.id, {highlighted: true},(tab2)=>{
-													chrome.tabs.update(tab.openerTabId, {highlighted: false}, (tab3)=>{;});
-											});
-													
-											}else{
-												if(!chr_tab){
-													var op_cnt_chk=url_chg_cnt.findIndex((t)=>{return t[0]==tab.openerTabId;});
-													var in_op_hist=false;
-													if(op_cnt_chk>=0){
-														in_op_hist=(url_chg_cnt[op_cnt_chk][2].includes(tb_url))?true:false;
-													}
-													if(lks<0 && !in_op_hist){
-														to_discard.push([tab.id,tb_url,tab.openerTabId]);
-														discardFlag=to_discard.length;
-													chrome.tabs.update(tab.openerTabId, {highlighted: true},(tab2)=>{
-														chrome.tabs.update(tab.id, {highlighted: false}, (tab3)=>{;});
-													});
-													}
-												}	
-											}
-									
-							}
-					}
-				}
-			}else{
-				if(lk_ix>=0){
-					tb_links[lk_ix][1]=[];
-				}	
-			}
-			requestLinks(tab.id);
-			url_chg_cnt[cnt_chk][1]+=1;
-		}else{
-			url_chg_cnt.push([tab.id,0,[tb_url]]);
-		}
-			if(!!discardFlag){
-				to_discard=to_discard.filter((t)=>{return t[0]!=tab.id;});
-				if(!tab.discarded){
-					discardTab(tab.id,true,(op_tab_exist)?tab.openerTabId:null);
-				}else{
-					discarded.push([tab.id,getUrl(tab),(op_tab_exist)?tab.openerTabId:null]);
-				}
-			}else{
-				requestLinks(tab.id);
-			}
-		
-		});
-}
-
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-	if(changeInfo.url){
-		url_upd(tab,changeInfo.url);
-	}else if(changeInfo.status!=='unloaded'){
-		discarded=discarded.filter((d)=>{return d[0]!=tab.id;});
-	}
+function url_chk(tab,tb_url){
+	let chr_tab=(tb_url.startsWith('chrome://') || tb_url.startsWith('chrome-extension://') ||  (tb_url.startsWith('about:') && tb_url!=='about:blank') )?true:false;
 	
-	if(changeInfo.status==='complete'){
-		requestLinks(tab.id);
+	let ix=tbs.findIndex((t)=>{return t.id===tab.id;}); if(ix>=0){ //if tab is in tbs array
+		if(tbs[ix].urls[0]!==tb_url){ //if tab URL !== current/latest URL
+			tbs[ix].urls.unshift(tb_url);
+			tbs[ix].tb_links=[];
+		}
+
+	}else if(!chr_tab){ //if it's tab's 1st non-Chrome URL and not in tbs array
+		let tb=JSON.parse(tbo);
+		tb.id=tab.id;
+		let op_exist=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?true:false;
+		tb.op_id=(op_exist)?tab.openerTabId:tb.op_id;
+		tb.og_url=tb_url;
+		tb.urls.unshift(tb_url);
+		
+		if(op_exist){
+			let ixp=tbs.findIndex((t)=>{return (t.id)===(tab.openerTabId);}); if(ixp>=0){
+				tb.op_url=tbs[ixp].urls[0];
+			}
+		}
+		
+		tbs.push(tb);		
 	}
-});
+}
 
 chrome.windows.onCreated.addListener((window) => {
    windowProc(window);
 });
 
-chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
-	tb_links=tb_links.filter((t)=>{return t[0]!=tabId;});
-	to_discard=to_discard.filter((t)=>{return t[0]!=tabId;});
-	discarded=discarded.filter((d)=>{return d[0]!=tabId;});
-	url_chg_cnt=url_chg_cnt.filter((t)=>{return t[0]!=tabId;});
+chrome.tabs.onActivated.addListener((activeInfo) => {
+   ac_tab=activeInfo.tabId;
 });
-	
-chrome.tabs.onCreated.addListener(function(tab) {
-	let tu=getUrl(tab);
-	url_chg_cnt.push([tab.id,0,[]]);
-	if(!!tu && typeof tu!=="undefined" && tu!==""){
-		 url_upd(tab,tu);
-	}
+
+chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
+	tbs=tbs.filter((t)=>{return t.id!=tabId;});
 });
 
 async function windowProc(window){
@@ -303,73 +238,107 @@ async function windowProc(window){
 					}
 			}
 			if(!xmp){
-				chrome.windows.remove(window.id,()=>{;});
+				chrome.windows.remove(window.id,()=>{resolve();});
 			}else{
-				for (let t = 0; t < tabs.length; t++) {
-					requestLinks(tabs[t].id);
-				}
 				resolve();
 			}
 	});
+	}else{
+		resolve();
 	}
 	});
 }
-
-function handleMessage(request, sender, sendResponse) {
-	if(request.type=="get_info"){
-		sendResponse({info: sender});
-	}else if(request.type=="links"){
-		let tbl=tb_links.findIndex((t)=>{return t[0]==sender.tab.id;});
-		if(tbl>=0){
-			let urls=tb_links[tbl].slice(1)[0];
-			tb_links[tbl][1]=Array.from(new Set([...urls,...request.links]));
-		}else{
-			tb_links.push([sender.tab.id, request.links]);
-		}
-		let op_tab_exist=(sender.tab.openerTabId!==null && typeof sender.tab.openerTabId!=='undefined')?true:false;
-		if(op_tab_exist){
-			
-			let tdsc_ix=to_discard.findIndex((d)=>{return (d[0]===sender.tab.id && d[1]===getUrl(sender.tab) && d[0]===sender.tab.openerTabId);});
-			if(tdsc_ix>=0){
-					to_discard=to_discard.filter((d,index)=>{return index!=dsc_ix});
-			}
-			
-				let dsc_ix=discarded.findIndex((d)=>{return (d[0]===sender.tab.id && d[1]===getUrl(sender.tab) && d[0]===sender.tab.openerTabId);});
-				if(dsc_ix>=0){
-						discarded=discarded.filter((d,index)=>{return index!=dsc_ix});
-				}
-				
-		}
-		sendResponse({response: "Message received"});
-	}else if(request.type=="nav"){
-		url_upd(sender.tab,request.new_url);
-		sendResponse({response: "Message received"});
-	}
-}
-
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-	handleMessage(request, sender, sendResponse);
-});
 
 chrome.windows.onCreated.addListener((window) => {
 	windowProc(window);
 });
 
-chrome.declarativeNetRequest.onRuleMatchedDebug.addListener((info)=>{
-	if(info.request.tabId>=0){
-		chrome.webNavigation.getFrame({
-		tabId: info.request.tabId,
-		frameId: info.request.frameId
-		}, function (frameInfo){
-			if(!!frameInfo){
-				  chrome.tabs.sendMessage(info.request.tabId, {message: "nav", url:frameInfo.url, f_id: info.request.frameId});
-			}
+async function tabAdd(d,tu){
+		await new Promise(function(resolve, reject) {
+					chrome.tabs.get(d, function(tab) { if (!chrome.runtime.lastError) {
+							url_chk(tab,tu);
+							resolve();
+					}	
+			});
 		});
-	}
+}
 
+async function rem_disc(b,d){
+await new Promise(function(resolve, reject) {
+	if(b){
+		tabs_remove(d);	
+	}else{
+		tabs_discard(d);
+	}
+	resolve();
+});
+}
+
+async function tabDiscrd(details,ix){
+await new Promise(function(resolve, reject) {
+	chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
+
+					let isBl=blacklistMatch(blacklist,details.url);
+					let isWl=blacklistMatch(whitelist,details.url);
+					let op_exist=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?true:false; 
+				 
+				 
+				 let uix=(typeof ix !=='undefined')?true:false;
+								 
+			 if(!isWl[0]){
+						if(op_exist){
+								let isWl2=null;
+								if(uix){
+									isWl2=blacklistMatch(whitelist,tbs[ix].op_url);
+								}
+								if( (!uix) || (uix && isWl2[0]===false)){
+									tabs_update(tab.openerTabId,{highlighted: true});
+									tabs_update(details.tabId,{highlighted: false});
+									rem_disc(isBl[0],details.tabId);
+								}
+						}else{
+							tabs_update(details.tabId,{highlighted: false});
+							rem_disc(isBl[0],details.tabId);
+					}
+			}
+
+			resolve();
+
+}
+
+});
+});
+}
+	
+chrome.webNavigation.onCommitted.addListener((details) => {
+	if(details.frameId===0){
+			
+		let tq=arr_match(details.transitionQualifiers,["server_redirect"]);
+		let tt=(["typed","auto_bookmark","manual_subframe","start_page","form_submit","reload","keyword","keyword_generated"].includes(details.transitionType))?true:false;
+		let du=details.url;
+		let chr_tab=(du.startsWith('chrome://') || du.startsWith('chrome-extension://') ||  (du.startsWith('about:') && du!=='about:blank') )?true:false;
+		let ix=-1;
+		let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
+		if(typeof details.tabId!=='undefined'){
+				ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
+		}
+			
+
+			
+			
+			 if(vu && !chr_tab){
+				 	tabAdd(details.tabId,du);
+					if( tq || !tt ){
+						tabDiscrd(details);
+					}
+			 }
+			
+	}
 });
 
 restore_options();
+
+initialise();
 
 } catch (e) {
   console.error(e);
