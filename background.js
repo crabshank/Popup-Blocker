@@ -390,12 +390,12 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 			let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
 
 			let ix=-1;
-			if(typeof details.tabId!=='undefined'){
-				ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
+			if(typeof tabId!=='undefined'){
+				ix=tbs.findIndex((t)=>{return (t.id)===(tabId);});
 			}
 
 			if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
-				tabAdd(details.tabId,du);
+				tabAdd(tabId,du);
 			}
 	}
 });
@@ -406,12 +406,12 @@ chrome.tabs.onCreated.addListener((tab)=>{
 			let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
 
 			let ix=-1;
-			if(typeof details.tabId!=='undefined'){
-				ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
+			if(typeof tab.id!=='undefined'){
+				ix=tbs.findIndex((t)=>{return (t.id)===(tab.id);});
 			}
 
 			if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
-				tabAdd(details.tabId,du);
+				tabAdd(tab.id,du);
 			}
 });
 
