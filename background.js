@@ -331,7 +331,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 			
 			 if( vu && ( ( ix>=0 && details.frameId===0) || (ix<0 && !chr_tab) ) ){
 				 	tabAdd(details.tabId,du);
-					if( tq || !tt ){
+					if( (tq || !tt) && !chr_tab && !du.startsWith('about:blank') ){
 						tabDiscrd(details);
 					}
 			 }
