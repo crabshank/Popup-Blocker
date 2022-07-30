@@ -12,7 +12,7 @@ try {
 
 var blacklist=[];
 var whitelist=[];
-var ac_tab=-1;
+var ac_tab=-3;
 chrome.tabs.query({active: true, currentWindow:true},(tabs)=>{ if (!chrome.runtime.lastError) {
 	ac_tab=tabs[0].id;
 }});
@@ -172,7 +172,7 @@ async function tabs_update(d, obj){
 
 async function tabs_discard(d){
 	await new Promise(function(resolve, reject) {
-		if(ac_tab!==-1 && ac_tab!==d){
+		if(ac_tab!==-3 && ac_tab!==d){
 				chrome.tabs.discard(d, function(tab){
 						resolve();
 				});
@@ -331,7 +331,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 			
 			 if( vu && ( ( ix>=0 && details.frameId===0) || (ix<0 && !chr_tab) ) ){
 				 	tabAdd(details.tabId,du);
-					if( (tq || !tt) && !chr_tab && !du.startsWith('about:blank') ){
+					if( (tq || !tt) && !chr_tab && !du.startsWith('about:blank') && ac_tab!==details.tabId ){
 						tabDiscrd(details);
 					}
 			 }
