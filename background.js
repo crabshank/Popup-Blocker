@@ -323,7 +323,7 @@ await new Promise(function(resolve, reject) {
 							rem_disc(isBl[0],details.tabId);
 					}
 			}
-			if(typeof tbs[ix]!=='undefined'){
+			if(typeof tbs[ix]!=='undefined' && tbs[ix].id===details.tabId){
 				tbs[ix].disc=true;
 			}
 			resolve();
