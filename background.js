@@ -2,6 +2,12 @@ function getUrl(tab) {
 	return (tab.url == "" && !!tab.pendingUrl && typeof tab.pendingUrl !== 'undefined' && tab.pendingUrl != '') ? tab.pendingUrl : tab.url;
 }
 
+function isChrTab(tu) {
+	return (tu.startsWith('chrome://') || tu.startsWith('chrome-extension://') ||  (tu.startsWith('about:') && !tu.startsWith('about:blank') ) )?true:false;
+}
+
+
+
 try {
 
 var blacklist=[];
@@ -141,7 +147,7 @@ function initialise(){
 	chrome.tabs.query({}, function(tabs) { if (!chrome.runtime.lastError) {
 		for (let t = 0; t < tabs.length; t++) {
 				let tu=getUrl(tabs[t]);
-				let chr_tab=(tu.startsWith('chrome://') || tu.startsWith('chrome-extension://') ||  (tu.startsWith('about:') && tu!=='about:blank') )?true:false;
+				let chr_tab=isChrTab(tu);
 				if(!!tu && typeof tu!=="undefined" && tu!=="" && !chr_tab){
 					url_chk(tabs[t],tu);
 				}
@@ -185,7 +191,8 @@ chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
 });
 
 function url_chk(tab,tb_url){
-	let chr_tab=(tb_url.startsWith('chrome://') || tb_url.startsWith('chrome-extension://') ||  (tb_url.startsWith('about:') && tb_url!=='about:blank') )?true:false;
+	let chr_tab=isChrTab(tb_url);
+	
 	
 	let ix=tbs.findIndex((t)=>{return t.id===tab.id;}); if(ix>=0){ //if tab is in tbs array
 		if(tbs[ix].urls[0]!==tb_url){ //if tab URL !== current/latest URL
@@ -230,7 +237,7 @@ async function windowProc(window){
 				let xmp=false;
 				for (let t = 0; t < tabs.length; t++) {
 					let t_url=getUrl(tabs[t]);
-					let chr_tab=(t_url.startsWith('chrome://') || t_url.startsWith('chrome-extension://') || (t_url.startsWith('about:') && t_url!=='about:blank') )?true:false;
+					let chr_tab=isChrTab(t_url);
 					let isWl=blacklistMatch(whitelist,t_url);
 					if(chr_tab || isWl[0]){
 						xmp=true;
@@ -315,7 +322,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 		let tq=arr_match(details.transitionQualifiers,["server_redirect"]);
 		let tt=(["typed","auto_bookmark","manual_subframe","start_page","form_submit","reload","keyword","keyword_generated"].includes(details.transitionType))?true:false;
 		let du=details.url;
-		let chr_tab=(du.startsWith('chrome://') || du.startsWith('chrome-extension://') ||  (du.startsWith('about:') && du!=='about:blank') )?true:false;
+		let chr_tab=isChrTab(du);
 		let ix=-1;
 		let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
 		if(typeof details.tabId!=='undefined'){
@@ -330,6 +337,24 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 			 }
 
 });
+
+
+chrome.webNavigation.onCreatedNavigationTarget.addListener((details)=>{
+	let du=details.url;
+	let chr_tab=isChrTab(du);
+	let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
+
+	let ix=-1;
+	if(typeof details.tabId!=='undefined'){
+			ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
+	}
+	
+	 if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
+		tabAdd(details.tabId,du);
+	}
+
+});
+
 
 restore_options();
 
