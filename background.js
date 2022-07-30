@@ -359,7 +359,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 				 	tabAdd(details.tabId,du);
 					
 					ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
-					if( ix>=0 && tbs[ix].disc===false && (tq || !tt) && !chr_tab && !du.startsWith('about:blank') && (ac_tab.cu!==ac_tab.op && details.tabId !==ac_tab.op) &&  (ac_tab.cu!==null &&  ac_tab.op!==null) ){
+					if( ix>=0 && tbs[ix].disc===false && (tq || !tt) && !chr_tab && !du.startsWith('about:blank')  ){
 							tabDiscrd(details, ix);
 					}
 			 }
