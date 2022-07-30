@@ -317,12 +317,12 @@ await new Promise(function(resolve, reject) {
 						if(op_exist){
 								let isWl2=null;
 									isWl2=blacklistMatch(whitelist,tbs[ix].op_url);
-								if( isWl2[0]===false){
+								if( isWl2[0]===false && ac_tab.cu!==tab.openerTabId){
 									tabs_update(tab.openerTabId,{highlighted: true});
 									tabs_update(details.tabId,{highlighted: false});
 									rem_disc(isBl[0],details.tabId);
 								}
-						}else{
+						}else if(ac_tab.cu!==ac_tab.ls){
 							if(ac_tab.ls!==details.tabId){
 								tabs_update(ac_tab.ls,{highlighted: true});
 							}
