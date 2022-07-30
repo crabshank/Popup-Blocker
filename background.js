@@ -12,10 +12,11 @@ try {
 
 var blacklist=[];
 var whitelist=[];
-var ac_tab={cu:null, op:null};
+var ac_tab={cu:null, op:null, ls:null};
 
 
 function set__ac_tab(tab){
+	ac_tab.ls=ac_tab.cu;
 	ac_tab.cu=tab.id;
 	ac_tab.op=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?tab.openerTabId:null;
 }
@@ -319,6 +320,7 @@ await new Promise(function(resolve, reject) {
 									rem_disc(isBl[0],details.tabId);
 								}
 						}else{
+							tabs_update(ac_tab.ls,{highlighted: true});
 							tabs_update(details.tabId,{highlighted: false});
 							rem_disc(isBl[0],details.tabId);
 					}
