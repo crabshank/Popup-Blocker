@@ -290,7 +290,7 @@ async function tabAdd(d,tu){
 		});
 }
 
-async function rem_disc(b,d/*,ix*/){
+async function rem_disc(b,d){
 await new Promise(function(resolve, reject) {
 	if(b){
 		tabs_remove(d);	
@@ -316,14 +316,16 @@ await new Promise(function(resolve, reject) {
 								if( isWl2[0]===false){
 									tabs_update(tab.openerTabId,{highlighted: true});
 									tabs_update(details.tabId,{highlighted: false});
-									rem_disc(isBl[0],details.tabId/*,ix*/);
+									rem_disc(isBl[0],details.tabId);
 								}
 						}else{
 							tabs_update(details.tabId,{highlighted: false});
-							rem_disc(isBl[0],details.tabId/*,ix*/);
+							rem_disc(isBl[0],details.tabId);
 					}
 			}
-			tbs[ix].disc=true;
+			if(typeof tbs[ix]!=='undefined'){
+				tbs[ix].disc=true;
+			}
 			resolve();
 
 }
