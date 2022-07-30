@@ -205,6 +205,9 @@ function replaceTabs(r,a){
 	let ix=tbs.findIndex((t)=>{return t.id===r;}); if(ix>=0){
 		tbs[ix].id=a;
 	}
+	ac_tab.cu=(ac_tab.cu===r)?a:ac_tab.cu;
+	ac_tab.op=(ac_tab.op===r)?a:ac_tab.op;
+	ac_tab.ls=(ac_tab.ls===r)?a:ac_tab.ls;
 }
 
 chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
