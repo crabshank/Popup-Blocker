@@ -305,7 +305,7 @@ await new Promise(function(resolve, reject) {
 async function tabDiscrd(details,ix){
 await new Promise(function(resolve, reject) {
 	chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
-
+					let b=false;
 					let isBl=blacklistMatch(blacklist,details.url);
 					let isWl=blacklistMatch(whitelist,details.url);
 					let op_exist=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?true:false; 
@@ -318,6 +318,7 @@ await new Promise(function(resolve, reject) {
 									tabs_update(tab.openerTabId,{highlighted: true});
 									tabs_update(details.tabId,{highlighted: false});
 									rem_disc(isBl[0],details.tabId);
+									b=true;
 								}
 						}else{
 							if(ac_tab.ls!==details.tabId){
@@ -325,11 +326,12 @@ await new Promise(function(resolve, reject) {
 							}
 								tabs_update(details.tabId,{highlighted: false});
 								rem_disc(isBl[0],details.tabId);
+								b=true;
 					}
 					
 					
 			}
-			if(typeof tbs[ix]!=='undefined' && tbs[ix].id===details.tabId){
+			if(b===true && typeof tbs[ix]!=='undefined' && tbs[ix].id===details.tabId){
 				tbs[ix].disc=true;
 			}
 			resolve();
