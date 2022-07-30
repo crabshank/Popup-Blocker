@@ -39,7 +39,7 @@ async function setActiveTab(id){
 
 setActiveTab();
 
-var tbo=JSON.stringify({id:-1, op_id:-2, og_url:'',urls:[], op_url:''});
+var tbo=JSON.stringify({id:-1, op_id:-2, og_url:'',urls:[], op_url:'', disc:false});
 var tbs=[];
 
 function removeEls(d, array){
@@ -194,11 +194,9 @@ async function tabs_update(d, obj){
 
 async function tabs_discard(d){
 	await new Promise(function(resolve, reject) {
-		//if(ac_tab.!==null && ac_tab!==d){
 				chrome.tabs.discard(d, function(tab){
 						resolve();
 				});
-		//}
 	});
 }
 
@@ -292,7 +290,7 @@ async function tabAdd(d,tu){
 		});
 }
 
-async function rem_disc(b,d){
+async function rem_disc(b,d/*,ix*/){
 await new Promise(function(resolve, reject) {
 	if(b){
 		tabs_remove(d);	
@@ -310,32 +308,27 @@ await new Promise(function(resolve, reject) {
 					let isBl=blacklistMatch(blacklist,details.url);
 					let isWl=blacklistMatch(whitelist,details.url);
 					let op_exist=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?true:false; 
-				 
-				 
-				 let uix=(typeof ix !=='undefined')?true:false;
 								 
 			 if(!isWl[0]){
 						if(op_exist){
 								let isWl2=null;
-								if(uix){
 									isWl2=blacklistMatch(whitelist,tbs[ix].op_url);
-								}
-								if( (!uix) || (uix && isWl2[0]===false)){
+								if( isWl2[0]===false){
 									tabs_update(tab.openerTabId,{highlighted: true});
 									tabs_update(details.tabId,{highlighted: false});
-									rem_disc(isBl[0],details.tabId);
+									rem_disc(isBl[0],details.tabId/*,ix*/);
 								}
 						}else{
 							tabs_update(details.tabId,{highlighted: false});
-							rem_disc(isBl[0],details.tabId);
+							rem_disc(isBl[0],details.tabId/*,ix*/);
 					}
 			}
-
+			tbs[ix].disc=true;
 			resolve();
 
 }
 
-});
+}); 
 });
 }
 
@@ -353,8 +346,10 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 			
 			 if( vu && ( ( ix>=0 && details.frameId===0) || (ix<0 && !chr_tab) ) ){
 				 	tabAdd(details.tabId,du);
-					if( (tq || !tt) && !chr_tab && !du.startsWith('about:blank') && (ac_tab.cu!==ac_tab.op && details.tabId !==ac_tab.op) &&  (ac_tab.cu!==null &&  ac_tab.op!==null) ){
-						tabDiscrd(details);
+					
+					ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
+					if( ix>=0 && tbs[ix].disc===false && (tq || !tt) && !chr_tab && !du.startsWith('about:blank') && (ac_tab.cu!==ac_tab.op && details.tabId !==ac_tab.op) &&  (ac_tab.cu!==null &&  ac_tab.op!==null) ){
+							tabDiscrd(details, ix);
 					}
 			 }
 
