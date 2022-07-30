@@ -172,7 +172,7 @@ function initialise(){
 				let tu=getUrl(tabs[t]);
 				let chr_tab=isChrTab(tu);
 				if(!!tu && typeof tu!=="undefined" && tu!=="" && !chr_tab){
-					url_chk(tabs[t],tu);
+					url_chk(tabs[t],tu,true);
 				}
 			}
 		}});
@@ -214,7 +214,7 @@ chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
 	replaceTabs(removedTabId,addedTabId);
 });
 
-function url_chk(tab,tb_url){
+function url_chk(tab,tb_url,force_null){
 	let chr_tab=isChrTab(tb_url);
 	
 	
@@ -229,6 +229,7 @@ function url_chk(tab,tb_url){
 		tb.id=tab.id;
 		let op_exist=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?true:false;
 		tb.op_id=(op_exist)?tab.openerTabId:tb.op_id;
+		tb.disc=(force_null)?null:false;
 		tb.og_url=tb_url;
 		tb.urls.unshift(tb_url);
 		
@@ -287,7 +288,7 @@ chrome.windows.onCreated.addListener((window) => {
 async function tabAdd(d,tu){
 		await new Promise(function(resolve, reject) {
 					chrome.tabs.get(d, function(tab) { if (!chrome.runtime.lastError) {
-							url_chk(tab,tu);
+							url_chk(tab,tu,false);
 							resolve();
 					}	
 			});
