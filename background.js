@@ -337,7 +337,7 @@ await new Promise(function(resolve, reject) {
 chrome.webNavigation.onCommitted.addListener((details) => {
 			
 		let tq=arr_match(details.transitionQualifiers,["server_redirect"]);
-		let tt=(["typed","auto_bookmark","manual_subframe","start_page","form_submit","reload","keyword","keyword_generated","from_address_bar"].includes(details.transitionType))?true:false;
+		let tt=(["typed","auto_bookmark","manual_subframe","start_page","form_submit","reload","keyword","keyword_generated","generated"].includes(details.transitionType))?true:false;
 		let du=details.url;
 		let chr_tab=isChrTab(du);
 		let ix=-1;
