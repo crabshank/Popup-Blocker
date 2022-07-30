@@ -319,11 +319,14 @@ await new Promise(function(resolve, reject) {
 									tabs_update(details.tabId,{highlighted: false});
 									rem_disc(isBl[0],details.tabId);
 								}
-						}else if(ac_tab.ls!==details.tabId){
-							tabs_update(ac_tab.ls,{highlighted: true});
-							tabs_update(details.tabId,{highlighted: false});
+						}else{
+							if(ac_tab.ls!==details.tabId){
+								tabs_update(ac_tab.ls,{highlighted: true});
+								tabs_update(details.tabId,{highlighted: false});
+							}
+								rem_disc(isBl[0],details.tabId);
 					}
-						rem_disc(isBl[0],details.tabId);
+					
 					
 			}
 			if(typeof tbs[ix]!=='undefined' && tbs[ix].id===details.tabId){
