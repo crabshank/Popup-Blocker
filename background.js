@@ -383,6 +383,38 @@ chrome.webNavigation.onCreatedNavigationTarget.addListener((details)=>{
 
 });
 
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+	if(changeInfo.url){
+			let du=changeInfo.url;
+			let chr_tab=isChrTab(du);
+			let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
+
+			let ix=-1;
+			if(typeof details.tabId!=='undefined'){
+				ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
+			}
+
+			if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
+				tabAdd(details.tabId,du);
+			}
+	}
+});
+
+chrome.tabs.onCreated.addListener((tab)=>{
+				let du=getUrl(tab);
+			let chr_tab=isChrTab(du);
+			let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
+
+			let ix=-1;
+			if(typeof details.tabId!=='undefined'){
+				ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
+			}
+
+			if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
+				tabAdd(details.tabId,du);
+			}
+});
+
 
 restore_options();
 
