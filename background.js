@@ -12,10 +12,32 @@ try {
 
 var blacklist=[];
 var whitelist=[];
-var ac_tab=-3;
-chrome.tabs.query({active: true, currentWindow:true},(tabs)=>{ if (!chrome.runtime.lastError) {
-	ac_tab=tabs[0].id;
-}});
+var ac_tab={cu:null, op:null};
+
+
+function set__ac_tab(tab){
+	ac_tab.cu=tab.id;
+	ac_tab.op=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?tab.openerTabId:null;
+}
+
+async function setActiveTab(id){
+	await new Promise(function(resolve, reject) {
+		if(id===null || typeof id==='undefined'){
+			chrome.tabs.query({active: true, currentWindow:true},(tabs)=>{ if (!chrome.runtime.lastError) {
+				set__ac_tab(tabs[0]);
+				resolve();
+			}});
+		}else{
+			chrome.tabs.get(id, function(tab) { if (!chrome.runtime.lastError) {
+								set__ac_tab(tab);
+								resolve();
+						}	
+				});
+		}
+	});
+}
+
+setActiveTab();
 
 var tbo=JSON.stringify({id:-1, op_id:-2, og_url:'',urls:[], op_url:''});
 var tbs=[];
@@ -172,11 +194,11 @@ async function tabs_update(d, obj){
 
 async function tabs_discard(d){
 	await new Promise(function(resolve, reject) {
-		if(ac_tab!==-3 && ac_tab!==d){
+		//if(ac_tab.!==null && ac_tab!==d){
 				chrome.tabs.discard(d, function(tab){
 						resolve();
 				});
-		}
+		//}
 	});
 }
 
@@ -223,7 +245,7 @@ chrome.windows.onCreated.addListener((window) => {
 });
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
-   ac_tab=activeInfo.tabId;
+	setActiveTab(activeInfo.tabId);
 });
 
 chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
@@ -316,7 +338,7 @@ await new Promise(function(resolve, reject) {
 });
 });
 }
-	
+
 chrome.webNavigation.onCommitted.addListener((details) => {
 			
 		let tq=arr_match(details.transitionQualifiers,["server_redirect"]);
@@ -331,7 +353,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 			
 			 if( vu && ( ( ix>=0 && details.frameId===0) || (ix<0 && !chr_tab) ) ){
 				 	tabAdd(details.tabId,du);
-					if( (tq || !tt) && !chr_tab && !du.startsWith('about:blank') && ac_tab!==details.tabId ){
+					if( (tq || !tt) && !chr_tab && !du.startsWith('about:blank') && (ac_tab.cu!==ac_tab.op &&  ac_tab.cu!==null &&  ac_tab.op!==null) ){
 						tabDiscrd(details);
 					}
 			 }
