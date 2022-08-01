@@ -347,7 +347,7 @@ await new Promise(function(resolve, reject) {
 chrome.webNavigation.onCommitted.addListener((details) => {
 			
 		//let tq=arr_match(details.transitionQualifiers,["server_redirect"],true);
-		//let tt=(["typed","auto_bookmark","manual_subframe","start_page","form_submit","reload","keyword","keyword_generated","generated"].includes(details.transitionType))?true:false;
+		let tt=(["typed","auto_bookmark","manual_subframe","start_page","form_submit","reload","keyword","keyword_generated","generated"].includes(details.transitionType))?true:false;
 		let du=details.url;
 		let chr_tab=isChrTab(du);
 		let ix=-1;
@@ -366,8 +366,16 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 							console.log(JSON.stringify(details));
 							console.log(JSON.stringify(ac_tab));
 						console.groupEnd()*/
-
-							tabDiscrd(details, ix);
+						
+						chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
+									chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
+										if(typeof window.tabs==='undefined' || window.tabs.length>1){
+											tabDiscrd(details, ix);
+										}
+									}else{
+										tabDiscrd(details, ix);
+									}});	
+						}});
 					}
 			 }
 
