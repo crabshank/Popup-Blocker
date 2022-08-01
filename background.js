@@ -360,13 +360,8 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 				 	tabAdd(details.tabId,du);
 					
 					ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
-					if( ix>=0 && tbs[ix].disc===false && !tt && (ac_tab.cu === details.tabId || ac_tab.cu ===  tbs[ix].op_id )  && tbs[ix].op_url !== tbs[ix].og_url && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') ){
-						/*console.group();
-							console.log(JSON.stringify(tbs[ix]));
-							console.log(JSON.stringify(details));
-							console.log(JSON.stringify(ac_tab));
-						console.groupEnd()*/
-						
+					if( ix>=0 && tbs[ix].disc===false && !tt && (ac_tab.cu === details.tabId || ac_tab.cu ===  tbs[ix].op_id )  && ( ( tbs[ix].op_url !== tbs[ix].og_url ) || ( tbs[ix].op_url!==tbs[ix].urls[0] ) ) && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') ){
+
 						chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
 									chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
 										if(typeof window.tabs==='undefined' || window.tabs.length>1){
@@ -376,7 +371,15 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 										tabDiscrd(details, ix);
 									}});	
 						}});
-					}
+					}/*else{
+						//DEBUG!
+						console.group();
+							console.log(JSON.stringify(tbs[ix]));
+							console.log(JSON.stringify(details));
+							console.log(JSON.stringify(ac_tab));
+						console.groupEnd();
+						
+					}*/
 			 }
 
 });
