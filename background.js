@@ -360,7 +360,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 				 	tabAdd(details.tabId,du);
 					
 					ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
-					if( ix>=0 && tbs[ix].disc===false && !tt && ac_tab.cu === details.tabId  && !chr_tab && !du.startsWith('about:blank') ){
+					if( ix>=0 && tbs[ix].disc===false && !tt && (ac_tab.cu === details.tabId || ac_tab.cu ===  tbs[ix].op_id )  && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') ){
 						/*console.group();
 							console.log(JSON.stringify(tbs[ix]));
 							console.log(JSON.stringify(details));
