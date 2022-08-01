@@ -55,18 +55,18 @@ function removeEls(d, array){
 	return newArray;
 }
 
-function arr_match(a,b){
+/*function arr_match(a,b,strict){
 	let m=false;
 	if(a.length>0 && b.length>0){
 		for (let i = 0, len=b.length; i < len; i++){
-			if(a.includes(b[i])){
+			if(a.includes(b[i])   && ( (strict===true && a.length===1) || (strict===false) )  ){
 				m=true;
 				break;
 			}
 		}
 	}
 	return m;
-}
+}*/
 
 function findIndexTotalInsens(string, substring, index) {
     string = string.toLocaleLowerCase();
@@ -346,7 +346,7 @@ await new Promise(function(resolve, reject) {
 
 chrome.webNavigation.onCommitted.addListener((details) => {
 			
-		let tq=arr_match(details.transitionQualifiers,["server_redirect"]);
+		//let tq=arr_match(details.transitionQualifiers,["server_redirect"],true);
 		let tt=(["typed","auto_bookmark","manual_subframe","start_page","form_submit","reload","keyword","keyword_generated","generated"].includes(details.transitionType))?true:false;
 		let du=details.url;
 		let chr_tab=isChrTab(du);
@@ -360,7 +360,13 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 				 	tabAdd(details.tabId,du);
 					
 					ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
-					if( ix>=0 && tbs[ix].disc===false && (tq || !tt) && !chr_tab && !du.startsWith('about:blank') && (  (tq && !tt) ||  ( (ac_tab.cu===ac_tab.op) || ( (ac_tab.cu===details.tabId) && (ac_tab.ls===ac_tab.op) )   )) ){
+					if( ix>=0 && tbs[ix].disc===false && !tt && ac_tab.cu === details.tabId  && !chr_tab && !du.startsWith('about:blank') ){
+						/*console.group();
+							console.log(JSON.stringify(tbs[ix]));
+							console.log(JSON.stringify(details));
+							console.log(JSON.stringify(ac_tab));
+						console.groupEnd()*/
+
 							tabDiscrd(details, ix);
 					}
 			 }
