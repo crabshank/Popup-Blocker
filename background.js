@@ -202,9 +202,18 @@ async function tabs_discard(d){
 }
 
 function replaceTabs(r,a){
-	let ix=tbs.findIndex((t)=>{return t.id===r;}); if(ix>=0){
-		tbs[ix].id=a;
+
+	for(let i=tbs.length-1; i>=0; i--){
+		let tb=tbs[i];
+		
+		if(tb.id===r){
+			tb.id=a;
+		}
+		if(tb.op_id===r){
+			tb.op_id=a;
+		}
 	}
+	
 	ac_tab.cu=(ac_tab.cu===r)?a:ac_tab.cu;
 	ac_tab.op=(ac_tab.op===r)?a:ac_tab.op;
 	ac_tab.ls=(ac_tab.ls===r)?a:ac_tab.ls;
@@ -371,7 +380,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 										tabDiscrd(details, ix);
 									}});	
 						}});
-					}/*else{
+					}else{
 						//DEBUG!
 						console.group();
 							console.log(JSON.stringify(tbs[ix]));
@@ -379,7 +388,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 							console.log(JSON.stringify(ac_tab));
 						console.groupEnd();
 						
-					}*/
+					}
 			 }
 
 });
