@@ -3,7 +3,7 @@ function getUrl(tab) {
 }
 
 function isChrTab(tu) {
-	return (tu.startsWith('chrome://') || tu.startsWith('chrome-extension://') ||  (tu.startsWith('about:') && !tu.startsWith('about:blank') ) )?true:false;
+	return ( (tu.startsWith('chrome://') && tu!=='chrome://newtab/') || tu.startsWith('chrome-extension://') ||  (tu.startsWith('about:') && !tu.startsWith('about:blank') ) )?true:false;
 }
 
 
@@ -237,7 +237,7 @@ function url_chk(tab,tb_url,force_null){
 		let tb=JSON.parse(tbo);
 		tb.id=tab.id;
 		let op_exist=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?true:false;
-		tb.op_id=(op_exist)?tab.openerTabId:tb.op_id;
+		tb.op_id=(op_exist && tb_url!=='chrome://newtab/')?tab.openerTabId:tb.op_id;
 		tb.disc=(force_null)?null:false;
 		tb.og_url=tb_url;
 		tb.urls.unshift(tb_url);
@@ -369,7 +369,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 				 	tabAdd(details.tabId,du);
 					
 					ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
-					if( ix>=0 && tbs[ix].disc===false && !tt && (ac_tab.cu === details.tabId || ac_tab.cu ===  tbs[ix].op_id )  && ( ( tbs[ix].op_url !== tbs[ix].og_url ) || ( tbs[ix].op_url!==tbs[ix].urls[0] ) ) && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') ){
+					if( ix>=0 && tbs[ix].disc===false && !tt && (ac_tab.cu === details.tabId || ac_tab.cu ===  tbs[ix].op_id )  && ( ( tbs[ix].op_url !== tbs[ix].og_url ) || ( tbs[ix].op_url!==tbs[ix].urls[0] ) ) && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') &&  tbs[ix].op_id!==-2){
 
 						chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
 									chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
@@ -380,7 +380,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 										tabDiscrd(details, ix);
 									}});	
 						}});
-					}/*else{
+					}else{
 						//DEBUG!
 						console.group();
 							console.log(JSON.stringify(tbs[ix]));
@@ -388,7 +388,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 							console.log(JSON.stringify(ac_tab));
 						console.groupEnd();
 						
-					}*/
+					}
 			 }
 
 });
