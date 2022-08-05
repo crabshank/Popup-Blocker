@@ -380,7 +380,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 										tabDiscrd(details, ix);
 									}});	
 						}});
-					}else{
+					}/*else{
 						//DEBUG!
 						console.group();
 							console.log(JSON.stringify(tbs[ix]));
@@ -388,7 +388,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 							console.log(JSON.stringify(ac_tab));
 						console.groupEnd();
 						
-					}
+					}*/
 			 }
 
 });
