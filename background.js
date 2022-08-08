@@ -379,7 +379,7 @@ function wnoc(dtails){
 	let tt2=(["form_submit","keyword_generated","generated"].includes(details.transitionType))?true:false;
 
 	ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
-	if( ix>=0 && tbs[ix].disc===false && !tt && (ac_tab.cu === details.tabId || ac_tab.cu ===  tbs[ix].op_id )  && ( ( tbs[ix].op_url !== tbs[ix].og_url ) || ( tbs[ix].op_url!==tbs[ix].urls[0] ) ) && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') &&  tbs[ix].op_id!==-2){
+	if( ix>=0 && tbs[ix].disc===false && !tt && (ac_tab.cu === details.tabId || ac_tab.cu ===  tbs[ix].op_id )  && ( ( tbs[ix].op_url !== tbs[ix].og_url ) || ( tbs[ix].op_url!==tbs[ix].urls[0] ) ) && (tbs[ix].og_url!==tbs[ix].urls[0])  && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') &&  tbs[ix].op_id!==-2){
 
 		chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
 					chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
