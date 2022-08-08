@@ -12,10 +12,11 @@ try {
 
 var blacklist=[];
 var whitelist=[];
-var ac_tab={cu:null, op:null, ls:null};
+var ac_tab={cu:null, op:null, ls:null, ls2:null};
 
 
 function set__ac_tab(tab){
+	ac_tab.ls2=ac_tab.ls;
 	ac_tab.ls=ac_tab.cu;
 	ac_tab.cu=tab.id;
 	ac_tab.op=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?tab.openerTabId:null;
@@ -217,6 +218,7 @@ function replaceTabs(r,a){
 	ac_tab.cu=(ac_tab.cu===r)?a:ac_tab.cu;
 	ac_tab.op=(ac_tab.op===r)?a:ac_tab.op;
 	ac_tab.ls=(ac_tab.ls===r)?a:ac_tab.ls;
+	ac_tab.ls2=(ac_tab.ls2===r)?a:ac_tab.ls2;
 }
 
 chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
@@ -294,28 +296,31 @@ chrome.windows.onCreated.addListener((window) => {
 	windowProc(window);
 });
 
-async function tabAdd(d,tu){
+async function tabAdd(d,tu,pass_det){
 		await new Promise(function(resolve, reject) {
 					chrome.tabs.get(d, function(tab) { if (!chrome.runtime.lastError) {
 							url_chk(tab,tu,false);
+							if(typeof pass_det!=='undefined'){
+								wnoc(pass_det);
+							}
 							resolve();
 					}	
 			});
 		});
 }
 
-async function rem_disc(b,d){
+async function rem_disc(b,d,n){
 await new Promise(function(resolve, reject) {
 	if(b){
 		tabs_remove(d);	
-	}else{
+	}else if(!n){
 		tabs_discard(d);
 	}
 	resolve();
 });
 }
 
-async function tabDiscrd(details,ix){
+async function tabDiscrd(details,ix,noDiscard){
 await new Promise(function(resolve, reject) {
 	chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
 
@@ -330,14 +335,14 @@ await new Promise(function(resolve, reject) {
 								if( isWl2[0]===false && ac_tab.cu!==tab.openerTabId){
 									tabs_update(tab.openerTabId,{highlighted: true});
 									tabs_update(details.tabId,{highlighted: false});
-									rem_disc(isBl[0],details.tabId);
+									rem_disc(isBl[0],details.tabId,noDiscard);
 								}
 						}else if(ac_tab.cu!==ac_tab.ls){
 							if(ac_tab.ls!==details.tabId){
 								tabs_update(ac_tab.ls,{highlighted: true});
 							}
 								tabs_update(details.tabId,{highlighted: false});
-								rem_disc(isBl[0],details.tabId);
+								rem_disc(isBl[0],details.tabId,noDiscard);
 					}
 					
 					
@@ -361,10 +366,38 @@ function printDebug(s,a,d,c){
 	console.groupEnd();
 }
 
+function wnoc(dtails){
+		let details=dtails.details;
+		let du=dtails.du;
+		let chr_tab=dtails.chr_tab;
+		let ix=-1;
+		let vu=dtails.vu;
+	//let tq=arr_match(details.transitionQualifiers,["server_redirect"],true);
+	let tt=(["typed","auto_bookmark","manual_subframe","start_page","reload","keyword"].includes(details.transitionType))?true:false;
+	let tt2=(["form_submit","keyword_generated","generated"].includes(details.transitionType))?true:false;
+
+	ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
+	if( ix>=0 && tbs[ix].disc===false && (!tt || tt2) && (ac_tab.cu === details.tabId || ac_tab.cu ===  tbs[ix].op_id )  && ( ( tbs[ix].op_url !== tbs[ix].og_url ) || ( tbs[ix].op_url!==tbs[ix].urls[0] ) ) && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') &&  tbs[ix].op_id!==-2){
+
+		chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
+					chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
+						if(typeof window.tabs==='undefined' || window.tabs.length>1){
+							tabDiscrd(details, ix,((tt2)?false:true));
+							printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);			
+						}
+					}else{
+						tabDiscrd(details, ix,((tt2)?false:true));
+						printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);
+					}});	
+		}});
+	}else{
+		printDebug('NOT DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);			
+	}
+}
+
+
 chrome.webNavigation.onCommitted.addListener((details) => {
 			
-		//let tq=arr_match(details.transitionQualifiers,["server_redirect"],true);
-		let tt=(["typed","auto_bookmark","manual_subframe","start_page","form_submit","reload","keyword","keyword_generated","generated"].includes(details.transitionType))?true:false;
 		let du=details.url;
 		let chr_tab=isChrTab(du);
 		let ix=-1;
@@ -374,25 +407,7 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 		}
 			
 			 if( vu && ( ( ix>=0 && details.frameId===0) || (ix<0 && !chr_tab) ) ){
-				 	tabAdd(details.tabId,du);
-					
-					ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
-					if( ix>=0 && tbs[ix].disc===false && !tt && (ac_tab.cu === details.tabId || ac_tab.cu ===  tbs[ix].op_id )  && ( ( tbs[ix].op_url !== tbs[ix].og_url ) || ( tbs[ix].op_url!==tbs[ix].urls[0] ) ) && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') &&  tbs[ix].op_id!==-2){
-
-						chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
-									chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
-										if(typeof window.tabs==='undefined' || window.tabs.length>1){
-											tabDiscrd(details, ix);
-											printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);			
-										}
-									}else{
-										tabDiscrd(details, ix);
-										printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);
-									}});	
-						}});
-					}else{
-						printDebug('NOT DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);			
-					}
+				 	tabAdd(details.tabId,du,{details: details, du:du, chr_tab:chr_tab, vu:vu});
 			 }
 
 });
