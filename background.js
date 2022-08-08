@@ -353,6 +353,14 @@ await new Promise(function(resolve, reject) {
 });
 }
 
+function printDebug(s,a,d,c){
+	console.groupCollapsed(s);
+	console.log(JSON.stringify(a));
+	console.log(JSON.stringify(d));
+	console.log(JSON.stringify(c));
+	console.groupEnd();
+}
+
 chrome.webNavigation.onCommitted.addListener((details) => {
 			
 		//let tq=arr_match(details.transitionQualifiers,["server_redirect"],true);
@@ -375,20 +383,16 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 									chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
 										if(typeof window.tabs==='undefined' || window.tabs.length>1){
 											tabDiscrd(details, ix);
+											printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);			
 										}
 									}else{
 										tabDiscrd(details, ix);
+										printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);
 									}});	
 						}});
-					}/*else{
-						//DEBUG!
-						console.group();
-							console.log(JSON.stringify(tbs[ix]));
-							console.log(JSON.stringify(details));
-							console.log(JSON.stringify(ac_tab));
-						console.groupEnd();
-						
-					}*/
+					}else{
+						printDebug('NOT DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);			
+					}
 			 }
 
 });
