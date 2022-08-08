@@ -203,7 +203,10 @@ async function tabs_discard(d){
 }
 
 function replaceTabs(r,a){
-
+	ac_tab.ls=(ac_tab.ls===r)?a:ac_tab.ls;
+	ac_tab.cu=(ac_tab.cu===r)?a:ac_tab.cu;
+	ac_tab.op=(ac_tab.op===r)?a:ac_tab.op;
+	ac_tab.ls2=(ac_tab.ls2===r)?a:ac_tab.ls2;
 	for(let i=tbs.length-1; i>=0; i--){
 		let tb=tbs[i];
 		
@@ -214,11 +217,7 @@ function replaceTabs(r,a){
 			tb.op_id=a;
 		}
 	}
-	
-	ac_tab.cu=(ac_tab.cu===r)?a:ac_tab.cu;
-	ac_tab.op=(ac_tab.op===r)?a:ac_tab.op;
-	ac_tab.ls=(ac_tab.ls===r)?a:ac_tab.ls;
-	ac_tab.ls2=(ac_tab.ls2===r)?a:ac_tab.ls2;
+		
 }
 
 chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
