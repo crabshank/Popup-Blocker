@@ -479,7 +479,7 @@ async function fq_loop(f){
 	if(prg===false){
 		while(f_queue.length>0){
 			prg=true;
-			f_queue[0]();
+			await f_queue[0]();
 			f_queue=f_queue.slice(1);
 		}
 		prg=false;
