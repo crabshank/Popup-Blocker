@@ -380,7 +380,8 @@ function wnoc(dtails){
 				tbs[ix].op_id!==-2 &&
 					( 	(tbs[ix].og_url !== tbs[ix].op_url && tbs[ix].urls[0] === tbs[ix].og_url) ||
 						(tbs[ix].og_url === tbs[ix].op_url && tbs[ix].urls[0] !== tbs[ix].og_url) ||
-						(ac_tab.cu === details.tabId && ac_tab.cu!==tbs[ix].op_id) )
+						(ac_tab.cu === details.tabId && ac_tab.cu!==tbs[ix].op_id) 
+						(ac_tab.cu === ac_tab.ls) )
 			){
 
 			chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
