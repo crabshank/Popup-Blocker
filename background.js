@@ -372,23 +372,27 @@ function wnoc(dtails){
 	let tt2=(["form_submit","keyword_generated","generated"].includes(details.transitionType))?true:false;
 
 	ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
-	if( ix>=0 && (tbs[ix].disc===0 || tbs[ix].disc===3 )  && !tt && (ac_tab.cu === details.tabId || ac_tab.cu ===  tbs[ix].op_id )  && ( ( tbs[ix].op_url !== tbs[ix].og_url ) || ( tbs[ix].op_url!==tbs[ix].urls[0] ) )  && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') &&  tbs[ix].op_id!==-2){
-
-		chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
-					chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
-						if(typeof window.tabs==='undefined' || window.tabs.length>1){
+	if( ix>=0){
+			if( (tbs[ix].disc===0 || tbs[ix].disc===3 )  && !tt && ( (ac_tab.cu === details.tabId && ac_tab.cu !== tbs[ix].op_id ) || ac_tab.cu ===  tbs[ix].op_id )  && ( ( tbs[ix].op_url !== tbs[ix].og_url ) || ( tbs[ix].op_url!==tbs[ix].urls[0] ) )  && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') &&  tbs[ix].op_id!==-2 /*&& tbs[ix].op_url.split('/')[2] !==  tbs[ix].urls[0].split('/')[2]*/ ){
+			chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
+						chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
+							if(typeof window.tabs==='undefined' || window.tabs.length>1){
+								tbs[ix].disc=(tt2)?0:1;
+								tabDiscrd(details, ix,((tt2)?true:false));
+								printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);			
+							}
+						}else{
 							tbs[ix].disc=(tt2)?0:1;
 							tabDiscrd(details, ix,((tt2)?true:false));
-							printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);			
-						}
-					}else{
-						tbs[ix].disc=(tt2)?0:1;
-						tabDiscrd(details, ix,((tt2)?true:false));
-						printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);
-					}});	
-		}});
+							printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);
+						}});	
+			}});
+		}else{
+			tbs[ix].disc=1;
+			printDebug('NOT DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);		
+		}
 	}else{
-		printDebug('NOT DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);			
+			printDebug('NOT DISCARDED/REMOVED: '+du,'Not in tabs array!',details,ac_tab);	
 	}
 }
 
