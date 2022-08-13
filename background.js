@@ -32,6 +32,11 @@ async function setActiveTab(id){
 		}else{
 			chrome.tabs.get(id, function(tab) { if (!chrome.runtime.lastError) {
 								set__ac_tab(tab);
+								let ix=tbs.findIndex((t)=>{return t.id===id;}); if(ix>=0){
+									if(tbs[ix].disc===4){
+										tbs[ix].disc=5;
+									}
+								}
 								resolve();
 						}	
 				});
@@ -185,6 +190,7 @@ async function tabs_remove(d){
 			});
 	});
 }
+
 async function tabs_update(d, obj){
 	await new Promise(function(resolve, reject) {
 			chrome.tabs.update(d, obj, (tab)=>{
@@ -345,6 +351,9 @@ await new Promise(function(resolve, reject) {
 					
 					
 			}
+			if(!noDiscard){
+				tbs[ix].disc=4;
+			}
 			resolve();
 
 }
@@ -373,7 +382,7 @@ function wnoc(dtails){
 
 	ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
 	if( ix>=0){
-		if( 	(tbs[ix].disc===0 || tbs[ix].disc===3 ) && // if all true, discard!
+		if( 	(tbs[ix].disc===0 || tbs[ix].disc===3|| tbs[ix].disc===4 ) && // if all true, discard!
 				!tt && 
 				!tbs[ix].og_url.startsWith('about:') &&
 				!du.startsWith('about:blank') &&
