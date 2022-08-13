@@ -373,7 +373,7 @@ function wnoc(dtails){
 
 	ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
 	if( ix>=0){
-			if( (tbs[ix].disc===0 || tbs[ix].disc===3 )  && !tt && ( (ac_tab.cu === details.tabId && ac_tab.cu !== tbs[ix].op_id ) || ac_tab.cu ===  tbs[ix].op_id )  && ( ( tbs[ix].op_url !== tbs[ix].og_url ) || ( tbs[ix].op_url!==tbs[ix].urls[0] ) )  && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') &&  tbs[ix].op_id!==-2 /*&& tbs[ix].op_url.split('/')[2] !==  tbs[ix].urls[0].split('/')[2]*/ ){
+			if( (tbs[ix].disc===0 || tbs[ix].disc===3 )  && !tt && ( (ac_tab.cu === details.tabId && ac_tab.cu !== tbs[ix].op_id ) || ac_tab.cu ===  tbs[ix].op_id )  && ( ( tbs[ix].op_url !== tbs[ix].og_url ) || ( tbs[ix].op_url!==tbs[ix].urls[0] ) )  && (tbs[ix].og_url === tbs[ix].op_url && tbs[ix].urls[0] !== tbs[ix].og_url) && !chr_tab && !tbs[ix].og_url.startsWith('about:') && !du.startsWith('about:blank') &&  tbs[ix].op_id!==-2 /*&& tbs[ix].op_url.split('/')[2] !==  tbs[ix].urls[0].split('/')[2]*/ ){
 			chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
 						chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
 							if(typeof window.tabs==='undefined' || window.tabs.length>1){
