@@ -6,14 +6,14 @@ function isChrTab(tu) {
 	return ( (tu.startsWith('chrome://') && tu!=='chrome://newtab/') || tu.startsWith('chrome-extension://') ||  (tu.startsWith('about:') && !tu.startsWith('about:blank') ) )?true:false;
 }
 
-
+var f_queue=[]; 
+var prg=false;
 
 try {
 
 var blacklist=[];
 var whitelist=[];
 var ac_tab={cu:null, op:null, ls:null, ls2:null};
-
 
 function set__ac_tab(tab){
 	ac_tab.ls2=ac_tab.ls;
@@ -166,7 +166,6 @@ function save_options()
 
 }
 
-
 function initialise(){
 	chrome.tabs.query({}, function(tabs) { if (!chrome.runtime.lastError) {
 		for (let t = 0; t < tabs.length; t++) {
@@ -221,7 +220,7 @@ function replaceTabs(r,a){
 }
 
 chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
-	replaceTabs(removedTabId,addedTabId);
+	fq_loop(()=>{ replaceTabs(removedTabId,addedTabId); });
 });
 
 function url_chk(tab,tb_url,force_null){
@@ -254,15 +253,15 @@ function url_chk(tab,tb_url,force_null){
 }
 
 chrome.windows.onCreated.addListener((window) => {
-   windowProc(window);
+    fq_loop(()=>{ windowProc(window); });
 });
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
-	setActiveTab(activeInfo.tabId);
+	fq_loop(()=>{ setActiveTab(activeInfo.tabId); });
 });
 
 chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
-	tbs=tbs.filter((t)=>{return t.id!=tabId;});
+	tbs=tbs.filter((t)=>{return t.id!==tabId;});
 });
 
 async function windowProc(window){
@@ -292,7 +291,7 @@ async function windowProc(window){
 }
 
 chrome.windows.onCreated.addListener((window) => {
-	windowProc(window);
+	fq_loop(()=>{ windowProc(window); });
 });
 
 async function tabAdd(d,tu,pass_det){
@@ -393,9 +392,7 @@ function wnoc(dtails){
 	}
 }
 
-
-chrome.webNavigation.onCommitted.addListener((details) => {
-			
+async function wnoc0(details){
 		let du=details.url;
 		let chr_tab=isChrTab(du);
 		let ix=-1;
@@ -404,14 +401,16 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 				ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
 		}
 			
-			 if( vu && ( ( ix>=0 && details.frameId===0) || (ix<0 && !chr_tab) ) ){
-				 	tabAdd(details.tabId,du,{details: details, du:du, chr_tab:chr_tab, vu:vu});
-			 }
+		 if( vu && ( ( ix>=0 && details.frameId===0) || (ix<0 && !chr_tab) ) ){
+				tabAdd(details.tabId,du,{details: details, du:du, chr_tab:chr_tab, vu:vu});
+		 }
+}
 
+chrome.webNavigation.onCommitted.addListener((details) => {
+			fq_loop(()=>{ wnoc0(details); });
 });
 
-
-chrome.webNavigation.onCreatedNavigationTarget.addListener((details)=>{
+async function wnocr(details){
 	let du=details.url;
 	let chr_tab=isChrTab(du);
 	let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
@@ -424,10 +423,13 @@ chrome.webNavigation.onCreatedNavigationTarget.addListener((details)=>{
 	 if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
 		tabAdd(details.tabId,du);
 	}
+}
 
+chrome.webNavigation.onCreatedNavigationTarget.addListener((details)=>{	
+	fq_loop(()=>{ wnocr(details); });
 });
 
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+async function onTabUpdated(tabId, changeInfo, tab) {
 	if(changeInfo.url){
 			let du=changeInfo.url;
 			let chr_tab=isChrTab(du);
@@ -442,10 +444,15 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 				tabAdd(tabId,du);
 			}
 	}
+}
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+	fq_loop(()=>{ onTabUpdated(tabId, changeInfo, tab); });
 });
 
-chrome.tabs.onCreated.addListener((tab)=>{
-				let du=getUrl(tab);
+
+async function onTabCreated(tab) {
+			let du=getUrl(tab);
 			let chr_tab=isChrTab(du);
 			let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
 
@@ -457,12 +464,27 @@ chrome.tabs.onCreated.addListener((tab)=>{
 			if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
 				tabAdd(tab.id,du);
 			}
-});
+}
 
+chrome.tabs.onCreated.addListener((tab)=>{
+	fq_loop(()=>{ onTabCreated(tab); });
+});
 
 restore_options();
 
 initialise();
+
+async function fq_loop(f){
+	f_queue.push(f);
+	if(prg===false){
+		while(f_queue.length>0){
+			prg=true;
+			f_queue[0]();
+			f_queue=f_queue.slice(1);
+		}
+		prg=false;
+	}
+}
 
 } catch (e) {
   console.error(e);
