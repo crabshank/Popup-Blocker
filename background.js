@@ -379,8 +379,8 @@ function wnoc(dtails){
 				!du.startsWith('about:blank') &&
 				tbs[ix].op_id!==-2 &&
 					( 	(tbs[ix].og_url !== tbs[ix].op_url && tbs[ix].urls[0] === tbs[ix].og_url) ||
-						(tbs[ix].og_url === tbs[ix].op_url && tbs[ix].urls[0] !== tbs[ix].og_url) ) &&
-				(ac_tab.cu === details.tabId && ac_tab.cu!==tbs[ix].op_id)
+						(tbs[ix].og_url === tbs[ix].op_url && tbs[ix].urls[0] !== tbs[ix].og_url) ||
+						(ac_tab.cu === details.tabId && ac_tab.cu!==tbs[ix].op_id) )
 			){
 
 			chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
