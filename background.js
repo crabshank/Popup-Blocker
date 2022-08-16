@@ -23,7 +23,7 @@ function set__ac_tab(tab){
 }
 
 async function setActiveTab(id){
-	await new Promise(function(resolve, reject) {
+	return new Promise(function(resolve, reject) {
 		if(id===null || typeof id==='undefined'){
 			chrome.tabs.query({active: true, currentWindow:true},(tabs)=>{ if (!chrome.runtime.lastError) {
 				set__ac_tab(tabs[0]);
@@ -184,7 +184,7 @@ function initialise(){
 }
 
 async function tabs_remove(d){
-	await new Promise(function(resolve, reject) {
+	return new Promise(function(resolve, reject) {
 			chrome.tabs.remove(d, ()=>{
 				resolve();
 			});
@@ -192,7 +192,7 @@ async function tabs_remove(d){
 }
 
 async function tabs_update(d, obj){
-	await new Promise(function(resolve, reject) {
+	return new Promise(function(resolve, reject) {
 			chrome.tabs.update(d, obj, (tab)=>{
 				resolve();
 			});
@@ -200,7 +200,7 @@ async function tabs_update(d, obj){
 }
 
 async function tabs_discard(d){
-	await new Promise(function(resolve, reject) {
+	return new Promise(function(resolve, reject) {
 				chrome.tabs.discard(d, function(tab){
 						resolve();
 				});
@@ -271,7 +271,7 @@ chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 });
 
 async function windowProc(window){
-	await new Promise(function(resolve, reject) {
+	return new Promise(function(resolve, reject) {
 		if (window.type==='popup'){
 		chrome.tabs.query({windowId: window.id}, function(tabs) {
 				let xmp=false;
@@ -301,7 +301,7 @@ chrome.windows.onCreated.addListener((window) => {
 });
 
 async function tabAdd(d,tu,pass_det){
-		await new Promise(function(resolve, reject) {
+		return new Promise(function(resolve, reject) {
 					chrome.tabs.get(d, function(tab) { if (!chrome.runtime.lastError) {
 							url_chk(tab,tu,false);
 							if(typeof pass_det!=='undefined'){
@@ -314,7 +314,7 @@ async function tabAdd(d,tu,pass_det){
 }
 
 async function rem_disc(b,d,n){
-await new Promise(function(resolve, reject) {
+return new Promise(function(resolve, reject) {
 	if(b){
 		tabs_remove(d);	
 	}else if(!n){
@@ -325,7 +325,7 @@ await new Promise(function(resolve, reject) {
 }
 
 async function tabDiscrd(details,ix,noDiscard){
-await new Promise(function(resolve, reject) {
+return new Promise(function(resolve, reject) {
 	chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
 
 					let isBl=blacklistMatch(blacklist,details.url);
@@ -424,7 +424,7 @@ async function wnoc0(details){
 		}
 			
 		 if( vu && ( ( ix>=0 && details.frameId===0) || (ix<0 && !chr_tab) ) ){
-				tabAdd(details.tabId,du,{details: details, du:du, chr_tab:chr_tab, vu:vu});
+				await tabAdd(details.tabId,du,{details: details, du:du, chr_tab:chr_tab, vu:vu});
 		 }
 }
 
@@ -443,7 +443,7 @@ async function wnocr(details){
 	}
 	
 	 if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
-		tabAdd(details.tabId,du);
+		await tabAdd(details.tabId,du);
 	}
 }
 
@@ -463,7 +463,7 @@ async function onTabUpdated(tabId, changeInfo, tab) {
 			}
 
 			if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
-				tabAdd(tabId,du);
+				await tabAdd(tabId,du);
 			}
 	}
 }
@@ -484,7 +484,7 @@ async function onTabCreated(tab) {
 			}
 
 			if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
-				tabAdd(tab.id,du);
+				await tabAdd(tab.id,du);
 			}
 }
 
