@@ -23,12 +23,13 @@ function set__ac_tab(tab){
 }
 
 async function setActiveTab(id){
-	return new Promise(function(resolve, reject) {
+	return new Promise(function(resolve) {
 		if(id===null || typeof id==='undefined'){
 			chrome.tabs.query({active: true, currentWindow:true},(tabs)=>{ if (!chrome.runtime.lastError) {
 				set__ac_tab(tabs[0]);
-				resolve();
-			}});
+			}
+			resolve();
+			});
 		}else{
 			chrome.tabs.get(id, function(tab) { if (!chrome.runtime.lastError) {
 								set__ac_tab(tab);
@@ -37,8 +38,8 @@ async function setActiveTab(id){
 										tbs[ix].disc=5;
 									}
 								}
-								resolve();
 						}	
+						resolve();
 				});
 		}
 	});
@@ -46,7 +47,7 @@ async function setActiveTab(id){
 
 setActiveTab();
 
-var tbo=JSON.stringify({id:-1, op_id:-2, og_url:'',urls:[], op_url:'', disc:3});
+var tbo=JSON.stringify({id:-3, op_id:-2, og_url:'',urls:[], op_url:'', disc:3});
 var tbs=[];
 
 function removeEls(d, array){
@@ -307,8 +308,8 @@ async function tabAdd(d,tu,pass_det){
 							if(typeof pass_det!=='undefined'){
 								wnoc(pass_det);
 							}
-							resolve();
-					}	
+					}
+					resolve();
 			});
 		});
 }
@@ -354,10 +355,9 @@ return new Promise(function(resolve, reject) {
 			if(!noDiscard){
 				tbs[ix].disc=4;
 			}
-			resolve();
 
 }
-
+resolve();
 }); 
 });
 }
