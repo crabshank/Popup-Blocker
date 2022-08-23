@@ -27,9 +27,8 @@ async function setActiveTab(id){
 		if(id===null || typeof id==='undefined'){
 			chrome.tabs.query({active: true, currentWindow:true},(tabs)=>{ if (!chrome.runtime.lastError) {
 				set__ac_tab(tabs[0]);
-			}
-			resolve();
-			});
+				resolve();
+			}});
 		}else{
 			chrome.tabs.get(id, function(tab) { if (!chrome.runtime.lastError) {
 								set__ac_tab(tab);
@@ -38,16 +37,16 @@ async function setActiveTab(id){
 										tbs[ix].disc=5;
 									}
 								}
+								resolve();
 						}	
-						resolve();
 				});
 		}
 	});
 }
 
-setActiveTab();
+(async ()=>{ await setActiveTab(); })();
 
-var tbo=JSON.stringify({id:-3, op_id:-2, og_url:'',urls:[], op_url:'', disc:3});
+var tbo=JSON.stringify({id:-1, op_id:-2, og_url:'',urls:[], op_url:'', disc:3});
 var tbs=[];
 
 function removeEls(d, array){
@@ -185,7 +184,7 @@ function initialise(){
 }
 
 async function tabs_remove(d){
-	return new Promise(function(resolve, reject) {
+	return new Promise(function(resolve) {
 			chrome.tabs.remove(d, ()=>{
 				resolve();
 			});
@@ -193,7 +192,7 @@ async function tabs_remove(d){
 }
 
 async function tabs_update(d, obj){
-	return new Promise(function(resolve, reject) {
+	return new Promise(function(resolve) {
 			chrome.tabs.update(d, obj, (tab)=>{
 				resolve();
 			});
@@ -201,7 +200,7 @@ async function tabs_update(d, obj){
 }
 
 async function tabs_discard(d){
-	return new Promise(function(resolve, reject) {
+	return new Promise(function(resolve) {
 				chrome.tabs.discard(d, function(tab){
 						resolve();
 				});
@@ -272,7 +271,7 @@ chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
 });
 
 async function windowProc(window){
-	return new Promise(function(resolve, reject) {
+	return new Promise(function(resolve) {
 		if (window.type==='popup'){
 		chrome.tabs.query({windowId: window.id}, function(tabs) {
 				let xmp=false;
@@ -302,31 +301,31 @@ chrome.windows.onCreated.addListener((window) => {
 });
 
 async function tabAdd(d,tu,pass_det){
-		return new Promise(function(resolve, reject) {
+		return new Promise(function(resolve) {
 					chrome.tabs.get(d, function(tab) { if (!chrome.runtime.lastError) {
 							url_chk(tab,tu,false);
 							if(typeof pass_det!=='undefined'){
 								wnoc(pass_det);
 							}
-					}
-					resolve();
+							resolve();
+					}	
 			});
 		});
 }
 
 async function rem_disc(b,d,n){
-return new Promise(function(resolve, reject) {
-	if(b){
-		tabs_remove(d);	
+return new Promise(function(resolve) {
+	if(b){	
+		(async ()=>{ await tabs_remove(d); })();
 	}else if(!n){
-		tabs_discard(d);
+		(async ()=>{ await tabs_discard(d); })();
 	}
 	resolve();
 });
 }
 
 async function tabDiscrd(details,ix,noDiscard){
-return new Promise(function(resolve, reject) {
+return new Promise(function(resolve) {
 	chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
 
 					let isBl=blacklistMatch(blacklist,details.url);
@@ -338,16 +337,25 @@ return new Promise(function(resolve, reject) {
 								let isWl2=null;
 									isWl2=blacklistMatch(whitelist,tbs[ix].op_url);
 								if( isWl2[0]===false && ac_tab.cu!==tab.openerTabId){
-									tabs_update(tab.openerTabId,{highlighted: true});
-									tabs_update(details.tabId,{highlighted: false});
-									rem_disc(isBl[0],details.tabId,noDiscard);
+									
+									
+									(async ()=>{ 
+										await tabs_update(tab.openerTabId,{highlighted: true});
+										await tabs_update(details.tabId,{highlighted: false});
+										await rem_disc(isBl[0],details.tabId,noDiscard);
+									})();
+									
 								}
 						}else if(ac_tab.cu!==ac_tab.ls){
 							if(ac_tab.ls!==details.tabId){
-								tabs_update(ac_tab.ls,{highlighted: true});
+								(async ()=>{ await tabs_update(ac_tab.ls,{highlighted: true}); })();
 							}
-								tabs_update(details.tabId,{highlighted: false});
-								rem_disc(isBl[0],details.tabId,noDiscard);
+							
+							(async ()=>{ 
+								await tabs_update(details.tabId,{highlighted: false});
+								await rem_disc(isBl[0],details.tabId,noDiscard); 
+							})();
+								
 					}
 					
 					
@@ -355,9 +363,10 @@ return new Promise(function(resolve, reject) {
 			if(!noDiscard){
 				tbs[ix].disc=4;
 			}
+			resolve();
 
 }
-resolve();
+
 }); 
 });
 }
@@ -396,13 +405,13 @@ function wnoc(dtails){
 			chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
 						chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
 							if(typeof window.tabs==='undefined' || window.tabs.length>1){
-								tbs[ix].disc=(tt2)?0:1;
-								tabDiscrd(details, ix,((tt2)?true:false));
+								tbs[ix].disc=(tt2)?0:1;							
+								(async ()=>{ await tabDiscrd(details, ix,((tt2)?true:false)); })();
 								printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);			
 							}
 						}else{
 							tbs[ix].disc=(tt2)?0:1;
-							tabDiscrd(details, ix,((tt2)?true:false));
+							(async ()=>{ await tabDiscrd(details, ix,((tt2)?true:false)); })();
 							printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);
 						}});	
 			}});
