@@ -313,15 +313,16 @@ async function tabAdd(d,tu,pass_det){
 		});
 }
 
-async function rem_disc(b,d,n){
-return new Promise(function(resolve) {
-	if(b){	
-		(async ()=>{ await tabs_remove(d); })();
-	}else if(!n){
-		(async ()=>{ await tabs_discard(d); })();
-	}
-	resolve();
-});
+async function rem_disc(b,d,n,tb){
+	return new Promise(function(resolve) {
+		if(b){	
+			(async ()=>{ await tabs_remove(d); })();
+		}else if(!n){
+			chrome.tabs.move(tb.id, {index: tb.index-1});
+			(async ()=>{ await tabs_discard(d); })();
+		}
+		resolve();
+	});
 }
 
 async function tabDiscrd(details,ix,noDiscard){
@@ -342,7 +343,7 @@ return new Promise(function(resolve) {
 									(async ()=>{ 
 										await tabs_update(tab.openerTabId,{highlighted: true});
 										await tabs_update(details.tabId,{highlighted: false});
-										await rem_disc(isBl[0],details.tabId,noDiscard);
+										await rem_disc(isBl[0],details.tabId,noDiscard,tab);
 									})();
 									
 								}
@@ -353,7 +354,7 @@ return new Promise(function(resolve) {
 							
 							(async ()=>{ 
 								await tabs_update(details.tabId,{highlighted: false});
-								await rem_disc(isBl[0],details.tabId,noDiscard); 
+								await rem_disc(isBl[0],details.tabId,noDiscard,tab); 
 							})();
 								
 					}
