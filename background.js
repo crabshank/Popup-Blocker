@@ -226,7 +226,7 @@ function replaceTabs(r,a){
 }
 
 chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
-	fq_loop(()=>{ replaceTabs(removedTabId,addedTabId); });
+	fq_loop( async ()=>{ await replaceTabs(removedTabId,addedTabId); });
 });
 
 function url_chk(tab,tb_url,force_null){
@@ -259,11 +259,11 @@ function url_chk(tab,tb_url,force_null){
 }
 
 chrome.windows.onCreated.addListener((window) => {
-    fq_loop(()=>{ windowProc(window); });
+    fq_loop( async ()=>{ await windowProc(window); });
 });
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
-	fq_loop(()=>{ setActiveTab(activeInfo.tabId); });
+	fq_loop( async ()=>{ await setActiveTab(activeInfo.tabId); });
 });
 
 chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
@@ -297,7 +297,7 @@ async function windowProc(window){
 }
 
 chrome.windows.onCreated.addListener((window) => {
-	fq_loop(()=>{ windowProc(window); });
+	fq_loop( async ()=>{ await windowProc(window); });
 });
 
 async function tabAdd(d,tu,pass_det){
@@ -439,7 +439,7 @@ async function wnoc0(details){
 }
 
 chrome.webNavigation.onCommitted.addListener((details) => {
-			fq_loop(()=>{ wnoc0(details); });
+			fq_loop( async ()=>{ await wnoc0(details); });
 });
 
 async function wnocr(details){
@@ -458,7 +458,7 @@ async function wnocr(details){
 }
 
 chrome.webNavigation.onCreatedNavigationTarget.addListener((details)=>{	
-	fq_loop(()=>{ wnocr(details); });
+	fq_loop( async ()=>{ await wnocr(details); });
 });
 
 async function onTabUpdated(tabId, changeInfo, tab) {
@@ -479,7 +479,7 @@ async function onTabUpdated(tabId, changeInfo, tab) {
 }
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-	fq_loop(()=>{ onTabUpdated(tabId, changeInfo, tab); });
+	fq_loop( async ()=>{ await onTabUpdated(tabId, changeInfo, tab); });
 });
 
 
@@ -499,7 +499,7 @@ async function onTabCreated(tab) {
 }
 
 chrome.tabs.onCreated.addListener((tab)=>{
-	fq_loop(()=>{ onTabCreated(tab); });
+	fq_loop( async ()=>{ await onTabCreated(tab); });
 });
 
 restore_options();
@@ -511,7 +511,7 @@ async function fq_loop(f){
 	if(prg===false){
 		while(f_queue.length>0){
 			prg=true;
-			await f_queue[0]();
+			f_queue[0]();
 			f_queue=f_queue.slice(1);
 		}
 		prg=false;
