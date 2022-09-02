@@ -2,6 +2,24 @@ function getUrl(tab) {
 	return (tab.url == "" && !!tab.pendingUrl && typeof tab.pendingUrl !== 'undefined' && tab.pendingUrl != '') ? tab.pendingUrl : tab.url;
 }
 
+function removeRuns(arr){
+	let c=arr[0];
+	let out=[arr[0]];
+	let len=arr.length;
+	let i=1;
+	if(arr.length>0){
+		while(i<len){
+			let a=arr[i];
+			if(a!==c){
+				out.push(a);
+				c=a;
+			}
+			i++;
+		}
+	}
+	return out;
+}
+
 function isChrTab(tu) {
 	return ( (tu.startsWith('chrome://') && tu!=='chrome://newtab/') || tu.startsWith('chrome-extension://') ||  (tu.startsWith('about:') && !tu.startsWith('about:blank') ) )?true:false;
 }
@@ -13,32 +31,37 @@ try {
 
 var blacklist=[];
 var whitelist=[];
-var ac_tab={cu:null, op:null, ls:null, ls2:null};
+var ac_tab={cu:null, op:null, ls:null};
 
 function set__ac_tab(tab){
-	ac_tab.ls2=ac_tab.ls;
 	ac_tab.ls=ac_tab.cu;
 	ac_tab.cu=tab.id;
 	ac_tab.op=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?tab.openerTabId:null;
 }
 
-async function setActiveTab(id){
+async function setActiveTab(id,nm){
 	return new Promise(function(resolve) {
 		if(id===null || typeof id==='undefined'){
 			chrome.tabs.query({active: true, currentWindow:true},(tabs)=>{ if (!chrome.runtime.lastError) {
 				set__ac_tab(tabs[0]);
+				}
 				resolve();
-			}});
+			});
 		}else{
 			chrome.tabs.get(id, function(tab) { if (!chrome.runtime.lastError) {
 								set__ac_tab(tab);
 								let ix=tbs.findIndex((t)=>{return t.id===id;}); if(ix>=0){
-									if(tbs[ix].disc===4){
-										tbs[ix].disc=5;
+									tbs[ix].fcns.push(nm);
+									if(!tbs[ix].disc.includes('ineligible')){
+										if(!tbs[ix].disc.includes('1st_act')){
+											tbs[ix].disc.push('1st_act');
+										}else{
+											tbs[ix].disc.push('ineligible');
+										}
 									}
 								}
-								resolve();
 						}	
+						resolve();
 				});
 		}
 	});
@@ -46,7 +69,7 @@ async function setActiveTab(id){
 
 (async ()=>{ await setActiveTab(); })();
 
-var tbo=JSON.stringify({id:-1, op_id:-2, og_url:'',urls:[], op_url:'', disc:3});
+var tbo=JSON.stringify({id:-3, op_id:-2,urls:[], op_url:'', disc: [], fcns: []});
 var tbs=[];
 
 function removeEls(d, array){
@@ -173,12 +196,12 @@ function save_options()
 
 function initialise(){
 	chrome.tabs.query({}, function(tabs) { if (!chrome.runtime.lastError) {
-		for (let t = 0; t < tabs.length; t++) {
-				let tu=getUrl(tabs[t]);
-				let chr_tab=isChrTab(tu);
-				if(!!tu && typeof tu!=="undefined" && tu!=="" && !chr_tab){
-					url_chk(tabs[t],tu,true);
-				}
+			for (let t = 0; t < tabs.length; t++) {
+				let tb=JSON.parse(tbo);
+				tb.id=tabs[t].id;
+				tb.urls.unshift(getUrl(tabs[t]));
+				tb.disc.push('initial');
+				tbs.push(tb);
 			}
 		}});
 }
@@ -207,63 +230,36 @@ async function tabs_discard(d){
 	});
 }
 
-function replaceTabs(r,a){
-	ac_tab.ls=(ac_tab.ls===r)?a:ac_tab.ls;
-	ac_tab.cu=(ac_tab.cu===r)?a:ac_tab.cu;
-	ac_tab.op=(ac_tab.op===r)?a:ac_tab.op;
-	ac_tab.ls2=(ac_tab.ls2===r)?a:ac_tab.ls2;
-	for(let i=tbs.length-1; i>=0; i--){
-		let tb=tbs[i];
-		
-		if(tb.id===r){
-			tb.id=a;
+async function replaceTabs(r,a){
+	return new Promise(function(resolve) {
+		ac_tab.ls=(ac_tab.ls===r)?a:ac_tab.ls;
+		ac_tab.cu=(ac_tab.cu===r)?a:ac_tab.cu;
+		ac_tab.op=(ac_tab.op===r)?a:ac_tab.op;
+		for(let i=tbs.length-1; i>=0; i--){
+			let tb=tbs[i];
+			
+			if(tb.id===r){
+				tb.id=a;
+			}
+			if(tb.op_id===r){
+				tb.op_id=a;
+			}
 		}
-		if(tb.op_id===r){
-			tb.op_id=a;
-		}
-	}
-		
+		resolve();
+	});
 }
 
 chrome.tabs.onReplaced.addListener(function(addedTabId, removedTabId) {
 	fq_loop( async ()=>{ await replaceTabs(removedTabId,addedTabId); });
 });
 
-function url_chk(tab,tb_url,force_null){
-	let chr_tab=isChrTab(tb_url);
-	
-	
-	let ix=tbs.findIndex((t)=>{return t.id===tab.id;}); if(ix>=0){ //if tab is in tbs array
-		if(tbs[ix].urls[0]!==tb_url){ //if tab URL !== current/latest URL
-			tbs[ix].urls.unshift(tb_url);
-			tbs[ix].tb_links=[];
-		}
-
-	}else if(!chr_tab){ //if it's tab's 1st non-Chrome URL and not in tbs array
-		let tb=JSON.parse(tbo);
-		tb.id=tab.id;
-		let op_exist=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?true:false;
-		tb.op_id=(op_exist && tb_url!=='chrome://newtab/')?tab.openerTabId:tb.op_id;
-		tb.disc=(force_null)?2:0;
-		tb.og_url=tb_url;
-		tb.urls.unshift(tb_url);
-		
-		if(op_exist){
-			let ixp=tbs.findIndex((t)=>{return (t.id)===(tab.openerTabId);}); if(ixp>=0){
-				tb.op_url=tbs[ixp].urls[0];
-			}
-		}
-		
-		tbs.push(tb);		
-	}
-}
 
 chrome.windows.onCreated.addListener((window) => {
     fq_loop( async ()=>{ await windowProc(window); });
 });
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
-	fq_loop( async ()=>{ await setActiveTab(activeInfo.tabId); });
+	fq_loop( async ()=>{ await setActiveTab(activeInfo.tabId,'activated'); });
 });
 
 chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
@@ -300,32 +296,23 @@ chrome.windows.onCreated.addListener((window) => {
 	fq_loop( async ()=>{ await windowProc(window); });
 });
 
-async function tabAdd(d,tu,pass_det){
-		return new Promise(function(resolve) {
-					chrome.tabs.get(d, function(tab) { if (!chrome.runtime.lastError) {
-							url_chk(tab,tu,false);
-							if(typeof pass_det!=='undefined'){
-								wnoc(pass_det);
-							}
-							resolve();
-					}	
-			});
-		});
-}
-
-async function rem_disc(b,d,n,tb){
+async function rem_disc(b,d,n,tb,dbg){
 	return new Promise(function(resolve) {
 		if(b){	
 			(async ()=>{ await tabs_remove(d); })();
+			printDebug('TAB REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 		}else if(!n){
 			chrome.tabs.move(tb.id, {index: tb.index-1});
 			(async ()=>{ await tabs_discard(d); })();
+			printDebug('TAB DISCARDED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
+		}else{
+			printDebug('TAB NOT DISCARDED OR REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 		}
 		resolve();
 	});
 }
 
-async function tabDiscrd(details,ix,noDiscard){
+async function tabDiscrd(details,ix,noDiscard,dbg){
 return new Promise(function(resolve) {
 	chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
 
@@ -343,9 +330,11 @@ return new Promise(function(resolve) {
 									(async ()=>{ 
 										await tabs_update(tab.openerTabId,{highlighted: true});
 										await tabs_update(details.tabId,{highlighted: false});
-										await rem_disc(isBl[0],details.tabId,noDiscard,tab);
+										await rem_disc(isBl[0],details.tabId,noDiscard,tab,dbg);
 									})();
 									
+								}else{
+									printDebug('TAB NOT DISCARDED OR REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 								}
 						}else if(ac_tab.cu!==ac_tab.ls){
 							if(ac_tab.ls!==details.tabId){
@@ -354,15 +343,20 @@ return new Promise(function(resolve) {
 							
 							(async ()=>{ 
 								await tabs_update(details.tabId,{highlighted: false});
-								await rem_disc(isBl[0],details.tabId,noDiscard,tab); 
+								await rem_disc(isBl[0],details.tabId,noDiscard,tab,dbg); 
 							})();
 								
+					}else{
+						printDebug('TAB NOT DISCARDED OR REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 					}
-					
-					
+			}else{
+				printDebug('TAB NOT DISCARDED OR REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 			}
+			
 			if(!noDiscard){
-				tbs[ix].disc=4;
+				if(!tbs[ix].disc.includes('ineligible')){
+					tbs[ix].disc.push('ineligible');
+				}
 			}
 			resolve();
 
@@ -373,133 +367,98 @@ return new Promise(function(resolve) {
 }
 
 function printDebug(s,a,d,c){
-	console.groupCollapsed(s);
+	console.group(s);
 	console.log(JSON.stringify(a));
 	console.log(JSON.stringify(d));
 	console.log(JSON.stringify(c));
 	console.groupEnd();
 }
 
-function wnoc(dtails){
-		let details=dtails.details;
-		let du=dtails.du;
-		let chr_tab=dtails.chr_tab;
-		let ix=-1;
-		let vu=dtails.vu;
+async function wnoc(details){
+return new Promise(function(resolve) {
+		ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
+if(details.frameId==0){
+		let du=details.url;
+	if(ix>=0 && 
+		(  (tbs[ix].disc.length>1 && tbs[ix].disc.at(-1)==='ineligible' && tbs[ix].disc.at(-2) !=='ineligible') ||
+			( !tbs[ix].disc.includes('ineligible') )	
+		)
+	){
 	//let tq=arr_match(details.transitionQualifiers,["server_redirect"],true);
 	let tt=(["typed","auto_bookmark","manual_subframe","start_page","reload","keyword"].includes(details.transitionType))?true:false;
 	let tt2=(["form_submit","keyword_generated","generated"].includes(details.transitionType))?true:false;
 
-	ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
-	if( ix>=0){
-		if( 	(tbs[ix].disc===0 || tbs[ix].disc===3|| tbs[ix].disc===4 ) && // if all true, discard!
+		let fcns_rr=removeRuns(tbs[ix].fcns);
+		if(	!tbs[ix].disc.includes('ineligible')  &&
 				!tt && 
-				!tbs[ix].og_url.startsWith('about:') &&
+				!tbs[ix].urls.at(-1).startsWith('about:') &&
 				!du.startsWith('about:blank') &&
 				tbs[ix].op_id!==-2 &&
-					( 	(tbs[ix].og_url !== tbs[ix].op_url && tbs[ix].urls[0] === tbs[ix].og_url) ||
-						(tbs[ix].og_url === tbs[ix].op_url && tbs[ix].urls[0] !== tbs[ix].og_url) ||
-						(ac_tab.cu === details.tabId && ac_tab.cu!==tbs[ix].op_id) ||
-						(ac_tab.cu === ac_tab.ls) )
+				(fcns_rr[0]==='created' && fcns_rr[1]==='activated')
 			){
 
 			chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
 						chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
-							if(typeof window.tabs==='undefined' || window.tabs.length>1){
-								tbs[ix].disc=(tt2)?0:1;							
-								(async ()=>{ await tabDiscrd(details, ix,((tt2)?true:false)); })();
-								printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);			
+							if(typeof window.tabs==='undefined' || window.tabs.length>1){						
+								(async ()=>{ await tabDiscrd(details, ix,((tt2)?true:false),[du,tbs[ix],details,ac_tab]); })();	
 							}
 						}else{
-							tbs[ix].disc=(tt2)?0:1;
-							(async ()=>{ await tabDiscrd(details, ix,((tt2)?true:false)); })();
-							printDebug('DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);
-						}});	
+							(async ()=>{ await tabDiscrd(details, ix,((tt2)?true:false),[du,tbs[ix],details,ac_tab]); })();
+						}
+						
+						});	
 			}});
 		}else{
-			printDebug('NOT DISCARDED/REMOVED: '+du,tbs[ix],details,ac_tab);		
+			if(!tbs[ix].disc.includes('ineligible')){
+				tbs[ix].disc.push('ineligible');
+			}
+			printDebug('NOT DISCARDED OR REMOVED: '+du,tbs[ix],details,ac_tab);		
 		}
-	}else{
-			printDebug('NOT DISCARDED/REMOVED: '+du,'Not in tabs array!',details,ac_tab);	
+
+	}else if(ix<0){
+				printDebug('NOT DISCARDED OR REMOVED: '+du,'Not in tabs array!',details,ac_tab);	
 	}
 }
-
-async function wnoc0(details){
-		let du=details.url;
-		let chr_tab=isChrTab(du);
-		let ix=-1;
-		let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
-		if(typeof details.tabId!=='undefined'){
-				ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
-		}
-			
-		 if( vu && ( ( ix>=0 && details.frameId===0) || (ix<0 && !chr_tab) ) ){
-				await tabAdd(details.tabId,du,{details: details, du:du, chr_tab:chr_tab, vu:vu});
-		 }
+	resolve();
+});
 }
 
 chrome.webNavigation.onCommitted.addListener((details) => {
-			fq_loop( async ()=>{ await wnoc0(details); });
+			fq_loop( async ()=>{ await wnoc(details); });
 });
 
-async function wnocr(details){
-	let du=details.url;
-	let chr_tab=isChrTab(du);
-	let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
-
-	let ix=-1;
-	if(typeof details.tabId!=='undefined'){
-			ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
-	}
-	
-	 if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
-		await tabAdd(details.tabId,du);
-	}
-}
-
-chrome.webNavigation.onCreatedNavigationTarget.addListener((details)=>{	
-	fq_loop( async ()=>{ await wnocr(details); });
-});
-
-async function onTabUpdated(tabId, changeInfo, tab) {
+async function onTabUpdated(tabId, changeInfo, tab,nm) {
 	if(changeInfo.url){
-			let du=changeInfo.url;
-			let chr_tab=isChrTab(du);
-			let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
-
-			let ix=-1;
-			if(typeof tabId!=='undefined'){
-				ix=tbs.findIndex((t)=>{return (t.id)===(tabId);});
-			}
-
-			if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
-				await tabAdd(tabId,du);
-			}
+		let ix=tbs.findIndex((t)=>{return (t.id)===(tabId);}); if(ix>=0){
+			tbs[ix].fcns.push(nm);
+			tbs[ix].urls.unshift(changeInfo.url);
+		}	
 	}
 }
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
-	fq_loop( async ()=>{ await onTabUpdated(tabId, changeInfo, tab); });
+	fq_loop( async ()=>{ await onTabUpdated(tabId, changeInfo, tab,'updated'); });
 });
 
-
-async function onTabCreated(tab) {
-			let du=getUrl(tab);
-			let chr_tab=isChrTab(du);
-			let vu=(!!du && typeof du!=="undefined" && du!=="")?true:false;
-
-			let ix=-1;
-			if(typeof tab.id!=='undefined'){
-				ix=tbs.findIndex((t)=>{return (t.id)===(tab.id);});
-			}
-
-			if( vu && (  ix>=0 || (ix<0 && !chr_tab) ) ){
-				await tabAdd(tab.id,du);
-			}
+async function onTabCreated(tab,nm) {
+	let tb=JSON.parse(tbo);
+	tb.id=tab.id;
+	tb.op_id=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?tab.openerTabId:-2;
+	tb.urls.unshift(getUrl(tab));
+	tb.disc.push('first');
+	tb.fcns.push(nm);
+	if(tb.op_id!==-2){
+		chrome.tabs.get(tb.op_id, function(tab_op) { if (!chrome.runtime.lastError) {
+			tb.op_url=getUrl(tab_op);
+			tbs.push(tb);
+		}});
+	}else{
+		tbs.push(tb);
+	}
 }
 
 chrome.tabs.onCreated.addListener((tab)=>{
-	fq_loop( async ()=>{ await onTabCreated(tab); });
+	fq_loop( async ()=>{ await onTabCreated(tab,'created'); });
 });
 
 restore_options();
