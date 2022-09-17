@@ -332,12 +332,9 @@ return new Promise(function(resolve) {
 										if(og_ix>=0 && tbs[og_ix].urls[0].split('/')[2]!==op_host){
 											dupl=true;
 										}else{
-											for (let i=0, len=tb.urls.length; i<len; i++){
-												 if(tb.urls[i].split('/')[2]===op_host){
+												 if(tb.urls[0].split('/')[2]===op_host){
 													dupl=true;
-													i=len-1;
 												 }
-											}
 										}
 								if(dupl){
 										let isWl2=null;
