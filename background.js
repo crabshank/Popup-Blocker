@@ -263,7 +263,9 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 });
 
 chrome.tabs.onRemoved.addListener(function(tabId, removeInfo){
-	tbs=tbs.filter((t)=>{return t.id!==tabId;});
+	(async () => {
+		tbs=tbs.filter((t)=>{return t.id!==tabId;});
+    })();
 });
 
 async function windowProc(window){
@@ -302,7 +304,7 @@ async function rem_disc(b,d,n,tb,dbg){
 			(async ()=>{ await tabs_remove(d); })();
 			printDebug('TAB REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 		}else if(!n){
-			chrome.tabs.move(tb.id, {index: tb.index-1});
+			chrome.tabs.move(tb.id, {index: ( (tb.index<=1)?tb.index:tb.index-1 ) });
 			(async ()=>{ await tabs_discard(d); })();
 			printDebug('TAB DISCARDED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 		}else{
@@ -322,20 +324,59 @@ return new Promise(function(resolve) {
 								 
 			 if(!isWl[0]){
 						if(op_exist){
-								let isWl2=null;
-									isWl2=blacklistMatch(whitelist,tbs[ix].op_url);
-								if( isWl2[0]===false && ac_tab.cu!==tab.openerTabId){
-									
-									
-									(async ()=>{ 
-										await tabs_update(tab.openerTabId,{highlighted: true});
-										await tabs_update(details.tabId,{highlighted: false});
-										await rem_disc(isBl[0],details.tabId,noDiscard,tab,dbg);
-									})();
+										let tb=tbs[ix]; //new tab - duplicate(?) of original tab
+										let dupl=false;
+										let op_host=tb.op_url.split('/')[2];
+										let og_ix=tbs.findIndex((t)=>{return t.id===tab.openerTabId;});
+										
+										if(og_ix>=0 && tbs[og_ix].urls[0].split('/')[2]!==op_host){
+											dupl=true;
+										}else{
+											for (let i=0, len=tb.urls.length; i<len; i++){
+												 if(tb.urls[i].split('/')[2]===op_host){
+													dupl=true;
+													i=len-1;
+												 }
+											}
+										}
+								if(dupl){
+										let isWl2=null;
+										isWl2=blacklistMatch(whitelist,tbs[ix].urls[0]);
+									if( isWl2[0]===false){
+											if(ac_tab.cu!==details.tabId){
+												(async ()=>{ 
+													await tabs_update(details.tabId,{highlighted: true});
+													await tabs_update(tab.openerTabId,{highlighted: false});
+												})();
+											}
+											
+										
+											chrome.tabs.get(tab.openerTabId, function(tab_op) { if (!chrome.runtime.lastError) {
+													(async ()=>{ 
+														await rem_disc(isBl[0],tab.openerTabId,false,tab_op,[getUrl(tab_op),tbs[og_ix],details,ac_tab]);
+													})();
+											}});
+
+									}else{
+										printDebug('TAB NOT DISCARDED OR REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
+									}
 									
 								}else{
-									printDebug('TAB NOT DISCARDED OR REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
-								}
+									let isWl2=null;
+										isWl2=blacklistMatch(whitelist,tbs[ix].op_url);
+									if( isWl2[0]===false && ac_tab.cu!==tab.openerTabId){
+										
+										
+										(async ()=>{ 
+											await tabs_update(tab.openerTabId,{highlighted: true});
+											await tabs_update(details.tabId,{highlighted: false});
+											await rem_disc(isBl[0],details.tabId,noDiscard,tab,dbg);
+										})();
+										
+									}else{
+										printDebug('TAB NOT DISCARDED OR REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
+									}
+							}
 						}else if(ac_tab.cu!==ac_tab.ls){
 							if(ac_tab.ls!==details.tabId){
 								(async ()=>{ await tabs_update(ac_tab.ls,{highlighted: true}); })();
