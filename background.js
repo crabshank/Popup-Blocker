@@ -329,13 +329,10 @@ return new Promise(function(resolve) {
 										let op_host=tb.op_url.split('/')[2];
 										let og_ix=tbs.findIndex((t)=>{return t.id===tab.openerTabId;});
 										
-										if(og_ix>=0 && tbs[og_ix].urls[0].split('/')[2]!==op_host){
+										if( ( tbs[og_ix].urls[0].split('/')[2]!==op_host ) && (ac_tab.cu!==tb.id || ac_tab.ls===tb.op_id)  ){
 											dupl=true;
-										}else{
-												 if(tb.urls[0].split('/')[2]===op_host){
-													dupl=true;
-												 }
 										}
+										
 								if(dupl){
 										let isWl2=null;
 										isWl2=blacklistMatch(whitelist,tbs[ix].urls[0]);
