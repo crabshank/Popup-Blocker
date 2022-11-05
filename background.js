@@ -336,7 +336,7 @@ return new Promise(function(resolve) {
 										let dupl=false;
 										let og_ix=tbs.findIndex((t)=>{return t.id===tab.openerTabId;});
 																				
-										if( (!aggressive_disc) && ( tbs[og_ix].urls[0].split('/')[2]!==op_host ) && (ac_tab.cu!==tb.id || ac_tab.ls===tb.op_id)  ){
+										if(  ( tbs[og_ix].urls[0].split('/')[2]!==op_host ) && (ac_tab.cu!==tb.id || ac_tab.ls===tb.op_id)  ){
 											dupl=true;
 										}
 										
@@ -351,7 +351,6 @@ return new Promise(function(resolve) {
 												})();
 											}
 											
-										
 											chrome.tabs.get(tab.openerTabId, function(tab_op) { if (!chrome.runtime.lastError) {
 													(async ()=>{ 
 														await rem_disc(isBl[0],tab.openerTabId,false,tab_op,[getUrl(tab_op),tbs[og_ix],details,ac_tab],op_host,tb_host);
