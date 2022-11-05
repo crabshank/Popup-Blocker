@@ -15,9 +15,17 @@ textarea {
 	width: -webkit-fill-available;
 	min-height: 3.1ch;
 }
+input[type="checkbox"] {
+	background: buttonface;
+    margin-bottom: 2px;
+    margin-left: 3px;
+    vertical-align: bottom;
+}
 </style>
 </head>
 <body>
+<label for="agg_dsc">Aggressively discard tabs:</label>
+<input type="checkbox" id="agg_dsc"></input><br><br>
 <span>Automatically close popup tabs with these URLs (enter domain names separated by commas; use asterisks with slashes):</span><br>
 <textarea id="blacklist"></textarea><br><br>
 <span>Allow popup windows / tabs with these URLs to stay open/undiscarded and (enter domain names separated by commas; use asterisks with slashes):</span><br>

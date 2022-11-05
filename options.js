@@ -1,6 +1,8 @@
 var svbt=document.getElementById('save');
 var blklst=document.getElementById('blacklist');
 var wlst=document.getElementById('whitelist');
+var agd=document.getElementById('agg_dsc');
+
 
 blklst.oninput=function () {
 blklst.style.height = 'inherit';
@@ -86,6 +88,7 @@ var saver =function(){
 				{
 					bList: blklst.value,
 					wList: wlst.value,
+					aggDisc: agd.checked
 				}, function(){
 					let status = document.getElementById('stats');
 					status.innerText = 'Options saved.';
@@ -126,6 +129,7 @@ function restore_options()
 			blklst.style.height = (blklst.scrollHeight+7)+"px";
 			wlst.style.height = 'inherit';
 			wlst.style.height = (wlst.scrollHeight+7)+"px";
+			agd.checked = unDef(items.aggDisc,false);
 			svbt.onclick = () => saver();
 		}
 		else
@@ -143,6 +147,7 @@ function save_options()
 	{
 		bList: "",
 		wList: "",
+		aggDisc: false
 	}, function(){
 		restore_options();
 	});

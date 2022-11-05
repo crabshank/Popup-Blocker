@@ -31,6 +31,7 @@ try {
 
 var blacklist=[];
 var whitelist=[];
+var aggressive_disc=false;
 var ac_tab={cu:null, op:null, ls:null};
 
 function set__ac_tab(tab){
@@ -164,13 +165,16 @@ function restore_options()
 		if (Object.keys(items).length != 0)
 		{
 
-		if(!!items.bList && typeof  items.bList!=='undefined'){
-			blacklist=items.bList.split('\n').join('').split(',');
-		}		
-		
-		if(!!items.wList && typeof  items.wList!=='undefined'){
-			whitelist=items.wList.split('\n').join('').split(',');
-		}
+			if(!!items.bList && typeof  items.bList!=='undefined'){
+				blacklist=items.bList.split('\n').join('').split(',');
+			}		
+			
+			if(!!items.wList && typeof  items.wList!=='undefined'){
+				whitelist=items.wList.split('\n').join('').split(',');
+			}		
+			if(!!items.aggDisc && typeof  items.aggDisc!=='undefined'){
+				aggressive_disc=items.aggDisc;
+			}
 		
 		}else{
 			save_options();
@@ -298,13 +302,15 @@ chrome.windows.onCreated.addListener((window) => {
 	fq_loop( async ()=>{ await windowProc(window); });
 });
 
-async function rem_disc(b,d,n,tb,dbg){
+async function rem_disc(b,d,n,tb,dbg,op_host,tb_host){
 	return new Promise(function(resolve) {
 		if(b){	
 			(async ()=>{ await tabs_remove(d); })();
 			printDebug('TAB REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 		}else if(!n){
-			chrome.tabs.move(tb.id, {index: ( (tb.index<=1)?tb.index:tb.index-1 ) });
+			if(op_host!==tb_host){
+				chrome.tabs.move(tb.id, {index: ( (tb.index<=1)?tb.index:tb.index-1 ) });
+			}
 			(async ()=>{ await tabs_discard(d); })();
 			printDebug('TAB DISCARDED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 		}else{
@@ -321,15 +327,16 @@ return new Promise(function(resolve) {
 					let isBl=blacklistMatch(blacklist,details.url);
 					let isWl=blacklistMatch(whitelist,details.url);
 					let op_exist=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?true:false; 
-								 
+					let tb=tbs[ix]; //new tab - duplicate(?) of original tab
+					let op_host=tb.op_url.split('/')[2];
+					let tb_host=dbg[0].split('/')[2];
 			 if(!isWl[0]){
 						if(op_exist){
-										let tb=tbs[ix]; //new tab - duplicate(?) of original tab
-										let dupl=false;
-										let op_host=tb.op_url.split('/')[2];
-										let og_ix=tbs.findIndex((t)=>{return t.id===tab.openerTabId;});
 										
-										if( ( tbs[og_ix].urls[0].split('/')[2]!==op_host ) && (ac_tab.cu!==tb.id || ac_tab.ls===tb.op_id)  ){
+										let dupl=false;
+										let og_ix=tbs.findIndex((t)=>{return t.id===tab.openerTabId;});
+																				
+										if( (!aggressive_disc) && ( tbs[og_ix].urls[0].split('/')[2]!==op_host ) && (ac_tab.cu!==tb.id || ac_tab.ls===tb.op_id)  ){
 											dupl=true;
 										}
 										
@@ -347,7 +354,7 @@ return new Promise(function(resolve) {
 										
 											chrome.tabs.get(tab.openerTabId, function(tab_op) { if (!chrome.runtime.lastError) {
 													(async ()=>{ 
-														await rem_disc(isBl[0],tab.openerTabId,false,tab_op,[getUrl(tab_op),tbs[og_ix],details,ac_tab]);
+														await rem_disc(isBl[0],tab.openerTabId,false,tab_op,[getUrl(tab_op),tbs[og_ix],details,ac_tab],op_host,tb_host);
 													})();
 											}});
 
@@ -358,27 +365,27 @@ return new Promise(function(resolve) {
 								}else{
 									let isWl2=null;
 										isWl2=blacklistMatch(whitelist,tbs[ix].op_url);
-									if( isWl2[0]===false && ac_tab.cu!==tab.openerTabId){
+									if( isWl2[0]===false && ( ac_tab.cu!==tab.openerTabId || aggressive_disc ) ){
 										
 										
 										(async ()=>{ 
 											await tabs_update(tab.openerTabId,{highlighted: true});
 											await tabs_update(details.tabId,{highlighted: false});
-											await rem_disc(isBl[0],details.tabId,noDiscard,tab,dbg);
+											await rem_disc(isBl[0],details.tabId,noDiscard,tab,dbg,op_host,tb_host);
 										})();
 										
 									}else{
 										printDebug('TAB NOT DISCARDED OR REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 									}
 							}
-						}else if(ac_tab.cu!==ac_tab.ls){
+						}else if( !aggressive_disc || ac_tab.cu!==ac_tab.ls){
 							if(ac_tab.ls!==details.tabId){
 								(async ()=>{ await tabs_update(ac_tab.ls,{highlighted: true}); })();
 							}
 							
 							(async ()=>{ 
 								await tabs_update(details.tabId,{highlighted: false});
-								await rem_disc(isBl[0],details.tabId,noDiscard,tab,dbg); 
+								await rem_disc(isBl[0],details.tabId,noDiscard,tab,dbg,op_host,tb_host); 
 							})();
 								
 					}else{
@@ -409,6 +416,24 @@ function printDebug(s,a,d,c){
 	console.groupEnd();
 }
 
+
+async function wnd_chk(details, tt2, du){
+	return new Promise(function(resolve) {
+					chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
+							chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
+									if(typeof window.tabs==='undefined' || window.tabs.length>1){						
+										(async ()=>{ await tabDiscrd(details, ix,tt2,[du,tbs[ix],details,ac_tab]); })();	
+									}
+								}else{
+									(async ()=>{ await tabDiscrd(details, ix,tt2,[du,tbs[ix],details,ac_tab]); })();
+								}
+							});	
+					}
+					resolve();
+				});
+	});
+}
+
 async function wnoc(details){
 return new Promise(function(resolve) {
 		ix=tbs.findIndex((t)=>{return (t.id)===(details.tabId);});
@@ -419,37 +444,37 @@ if(details.frameId==0){
 			( !tbs[ix].disc.includes('ineligible') )	
 		)
 	){
-	//let tq=arr_match(details.transitionQualifiers,["server_redirect"],true);
-	let tt=(["typed","auto_bookmark","manual_subframe","start_page","reload","keyword"].includes(details.transitionType))?true:false;
-	let tt2=(["form_submit","keyword_generated","generated"].includes(details.transitionType))?true:false;
-
-		let fcns_rr=removeRuns(tbs[ix].fcns);
+	if(aggressive_disc){
+		
 		if(	!tbs[ix].disc.includes('ineligible')  &&
-				!tt && 
 				!tbs[ix].urls.at(-1).startsWith('about:') &&
-				!du.startsWith('about:blank') &&
-				tbs[ix].op_id!==-2 &&
-				(fcns_rr[0]==='created' && fcns_rr[1]==='activated')
+				!tbs[ix].urls.at(-1).startsWith('chrome://') &&
+				!tbs[ix].urls.at(-1).startsWith('chrome-extension://') &&
+				!du.startsWith('about:blank')
 			){
-
-			chrome.tabs.get(details.tabId, function(tab) { if (!chrome.runtime.lastError) {
-						chrome.windows.get(tab.windowId, {populate: true},function(window){  if (!chrome.runtime.lastError) {
-							if(typeof window.tabs==='undefined' || window.tabs.length>1){						
-								(async ()=>{ await tabDiscrd(details, ix,((tt2)?true:false),[du,tbs[ix],details,ac_tab]); })();	
-							}
-						}else{
-							(async ()=>{ await tabDiscrd(details, ix,((tt2)?true:false),[du,tbs[ix],details,ac_tab]); })();
-						}
-						
-						});	
-			}});
-		}else{
-			if(!tbs[ix].disc.includes('ineligible')){
-				tbs[ix].disc.push('ineligible');
+				 (async ()=>{ await  wnd_chk(details, false, du); })();	
 			}
-			printDebug('NOT DISCARDED OR REMOVED: '+du,tbs[ix],details,ac_tab);		
-		}
+	}else{
+		//let tq=arr_match(details.transitionQualifiers,["server_redirect"],true);
+		let tt=(["typed","auto_bookmark","manual_subframe","start_page","reload","keyword"].includes(details.transitionType))?true:false;
+		let tt2=(["form_submit","keyword_generated","generated"].includes(details.transitionType))?true:false;
 
+			let fcns_rr=removeRuns(tbs[ix].fcns);
+			if(	!tbs[ix].disc.includes('ineligible')  &&
+					!tt && 
+					!tbs[ix].urls.at(-1).startsWith('about:') &&
+					!du.startsWith('about:blank') &&
+					tbs[ix].op_id!==-2 &&
+					(fcns_rr[0]==='created' && fcns_rr[1]==='activated')
+				){
+					(async ()=>{ await  wnd_chk(details, tt2, du); })();
+			}else{
+				if(!tbs[ix].disc.includes('ineligible')){
+					tbs[ix].disc.push('ineligible');
+				}
+				printDebug('NOT DISCARDED OR REMOVED: '+du,tbs[ix],details,ac_tab);		
+			}
+	}
 	}else if(ix<0){
 				printDebug('NOT DISCARDED OR REMOVED: '+du,'Not in tabs array!',details,ac_tab);	
 	}
