@@ -394,15 +394,15 @@ return new Promise(function(resolve) {
 				printDebug('TAB NOT DISCARDED OR REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 			}
 			
-			if(!noDiscard){
-				if(!tbs[ix].disc.includes('ineligible')){
-					tbs[ix].disc.push('ineligible');
-				}
-			}
-			resolve();
+
 
 }
-
+		if(!noDiscard){
+						if(!tbs[ix].disc.includes('ineligible')){
+							tbs[ix].disc.push('ineligible');
+						}
+		}
+			resolve();
 }); 
 });
 }
