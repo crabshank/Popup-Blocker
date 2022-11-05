@@ -70,7 +70,7 @@ async function setActiveTab(id,nm){
 
 (async ()=>{ await setActiveTab(); })();
 
-var tbo=JSON.stringify({id:-3, op_id:-2,urls:[], op_url:'', disc: [], fcns: []});
+var tbo=JSON.stringify({id:-3, op_id:-2,urls:[], op_url:null, disc: [], fcns: []});
 var tbs=[];
 
 function removeEls(d, array){
@@ -308,7 +308,7 @@ async function rem_disc(b,d,n,tb,dbg,op_host,tb_host){
 			(async ()=>{ await tabs_remove(d); })();
 			printDebug('TAB REMOVED: '+dbg[0],dbg[1],dbg[2],dbg[3]);
 		}else if(!n){
-			if(op_host!==tb_host){
+			if( op_host!==null && op_host!==tb_host ){
 				chrome.tabs.move(tb.id, {index: ( (tb.index<=1)?tb.index:tb.index-1 ) });
 			}
 			(async ()=>{ await tabs_discard(d); })();
@@ -328,7 +328,7 @@ return new Promise(function(resolve) {
 					let isWl=blacklistMatch(whitelist,details.url);
 					let op_exist=(tab.openerTabId!==null && typeof tab.openerTabId!=='undefined')?true:false; 
 					let tb=tbs[ix]; //new tab - duplicate(?) of original tab
-					let op_host=tb.op_url.split('/')[2];
+					let op_host=(tb.op_url===null)?tb.op_url:tb.op_url.split('/')[2];
 					let tb_host=dbg[0].split('/')[2];
 			 if(!isWl[0]){
 						if(op_exist){
@@ -449,7 +449,6 @@ if(details.frameId==0){
 				!tbs[ix].urls.at(-1).startsWith('about:') &&
 				!tbs[ix].urls.at(-1).startsWith('chrome://') &&
 				!tbs[ix].urls.at(-1).startsWith('chrome-extension://') &&
-				tbs[ix].op_id!==-2 &&
 				!du.startsWith('about:blank')
 			){
 				 (async ()=>{ await  wnd_chk(details, false, du); })();	
