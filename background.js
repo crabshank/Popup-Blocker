@@ -205,6 +205,9 @@ function initialise(){
 				tb.id=tabs[t].id;
 				tb.urls.unshift(getUrl(tabs[t]));
 				tb.disc.push('initial');
+				if(aggressive_disc && tabs[t].discarded===true){
+					tb.disc.push('ineligible');
+				}
 				tbs.push(tb);
 			}
 		}});
