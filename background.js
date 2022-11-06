@@ -452,6 +452,7 @@ if(details.frameId==0){
 				!tbs[ix].urls.at(-1).startsWith('about:') &&
 				!tbs[ix].urls.at(-1).startsWith('chrome://') &&
 				!tbs[ix].urls.at(-1).startsWith('chrome-extension://') &&
+				tbs[ix].op_id!==-2 &&
 				!du.startsWith('about:blank')
 			){
 				 (async ()=>{ await  wnd_chk(details, false, du); })();	
