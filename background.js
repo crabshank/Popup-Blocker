@@ -339,7 +339,7 @@ return new Promise(function(resolve) {
 										let dupl=false;
 										let og_ix=tbs.findIndex((t)=>{return t.id===tab.openerTabId;});
 																				
-										if(	(  ( tbs[og_ix].urls[0].split('/')[2]!==op_host ) && (ac_tab.cu!==tb.id || ac_tab.ls===tb.op_id)  ) || (getUrl(tab)===details.url) ){
+										if(	(  ( tbs[og_ix].urls[0].split('/')[2]!==op_host ) && (ac_tab.cu!==tb.id || ac_tab.ls===tb.op_id)  ) || (getUrl(tab)===tb.op_url) ){
 											dupl=true;
 										}
 										
