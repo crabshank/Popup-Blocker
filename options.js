@@ -2,6 +2,7 @@ var svbt=document.getElementById('save');
 var blklst=document.getElementById('blacklist');
 var wlst=document.getElementById('whitelist');
 var agd=document.getElementById('agg_dsc');
+var ovrrA=document.getElementById('overrideA');
 
 
 blklst.oninput=function () {
@@ -88,7 +89,8 @@ var saver =function(){
 				{
 					bList: blklst.value,
 					wList: wlst.value,
-					aggDisc: agd.checked
+					aggDisc: agd.checked,
+					ovrA: ovrrA.checked
 				}, function(){
 					let status = document.getElementById('stats');
 					status.innerText = 'Options saved.';
@@ -130,6 +132,7 @@ function restore_options()
 			wlst.style.height = 'inherit';
 			wlst.style.height = (wlst.scrollHeight+7)+"px";
 			agd.checked = unDef(items.aggDisc,false);
+			ovrrA.checked = unDef(items.ovrA,false);
 			svbt.onclick = () => saver();
 		}
 		else
@@ -147,7 +150,8 @@ function save_options()
 	{
 		bList: "",
 		wList: "",
-		aggDisc: false
+		aggDisc: false,
+		ovrA: false
 	}, function(){
 		restore_options();
 	});

@@ -25,11 +25,13 @@ input[type="checkbox"] {
 </head>
 <body>
 <label for="agg_dsc">Aggressively discard tabs:</label>
-<input type="checkbox" id="agg_dsc"></input><br><br>
+<input type="checkbox" id="agg_dsc"></input><br>
+<label for="overrideA">Override default behaviour for clicking links: <input id="overrideA" type="checkbox"></input><label><br><br>
 <span>Automatically close popup tabs with these URLs (enter domain names separated by commas; use asterisks with slashes):</span><br>
 <textarea id="blacklist"></textarea><br><br>
 <span>Allow popup windows / tabs with these URLs to stay open/undiscarded and (enter domain names separated by commas; use asterisks with slashes):</span><br>
 <textarea id="whitelist"></textarea><br>
+
 <div id="stats"></div>
 <button id="save">Save</button>
 <script src="options.js"></script>

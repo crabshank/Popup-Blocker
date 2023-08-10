@@ -1,11 +1,20 @@
 {
   "manifest_version": 3,
   "name": "Popup closer",
-  "version": "2023.4",
+  "version": "2023.8",
     "options_page":  "options.html",
    "background": {
- "service_worker": "background.js"
-  },
+		"service_worker": "background.js"
+	},  
+  "content_scripts": [
+    {
+	  "all_frames": true,
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": ["content.js"]
+    }
+  ],
      "permissions": ["tabs", "activeTab","scripting","storage","webNavigation"],
   "action": {
     "default_icon": "close.png",

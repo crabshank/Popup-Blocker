@@ -175,6 +175,10 @@ function restore_options()
 			if(!!items.aggDisc && typeof  items.aggDisc!=='undefined'){
 				aggressive_disc=items.aggDisc;
 			}
+			
+			/*if(!!items.ovrA && typeof  items.ovrA!=='undefined'){
+				overrideA=items.ovrA;
+			}*/
 		
 		}else{
 			save_options();
@@ -189,7 +193,9 @@ function save_options()
 				chrome.storage.sync.set(
 				{
 					bList: "",
-					wList: ""
+					wList: "",
+					aggDisc: false,
+					ovrA: false
 				}, function(){
 					console.log('Default options saved.');
 					restore_options();
