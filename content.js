@@ -12,10 +12,16 @@ function setupEvents(){
 	window.addEventListener('click',(e)=>{
 		let t=e.target;
 		if(t.tagName==='A'){
-			e.preventDefault();
-			e.stopPropagation();
-			if(e.button===0){ //same tab
-				window.open(t.href, ( (e.ctrlKey)? "_blank" : "_self") );
+			let lc=(e.button===0)?true:false;
+			let altLc=(e.altKey && lc)?true:false;
+			if(!altLc){
+				e.preventDefault();
+				e.stopPropagation();
+			}
+			if(lc && !altLc){
+				let nm=( e.shiftKey && (!(e.shiftKey && ( e.ctrlKey || e.altKey ) )) )?'':'_blank'; //new window is ''
+				nm=( e.shiftKey || e.ctrlKey  )?nm:'_self';
+				window.open(t.href, nm);
 			}
 		}
 	});
