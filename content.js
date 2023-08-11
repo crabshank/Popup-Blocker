@@ -6,9 +6,9 @@ function setupEvents(){
 			if(fourB || e.buttons===1){
 				e.preventDefault();
 				e.stopPropagation();
-				if(fourB){// new tab
+				/*if(fourB){// new tab
 					window.open(t.href,"_blank");
-				}	
+				}*/
 			}
 		}
 	});
