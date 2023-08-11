@@ -2,11 +2,14 @@ function setupEvents(){
 	window.addEventListener('pointerdown',(e)=>{
 		let t=e.target;
 		if(t.tagName==='A'){
-			e.preventDefault();
-			e.stopPropagation();
-			if(e.buttons===4){// new tab
-				window.open(t.href,"_blank");
-			}	
+			let fourB=(e.buttons===4)?true:false;
+			if(fourB || e.buttons===1){
+				e.preventDefault();
+				e.stopPropagation();
+				if(fourB){// new tab
+					window.open(t.href,"_blank");
+				}	
+			}
 		}
 	});
 	window.addEventListener('click',(e)=>{
