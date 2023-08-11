@@ -15,7 +15,7 @@ function setupEvents(){
 			e.preventDefault();
 			e.stopPropagation();
 			if(e.button===0){ //same tab
-				window.open(t.href,"_self");
+				window.open(t.href, ( (e.ctrlKey)? "_blank" : "_self") );
 			}
 		}
 	});
