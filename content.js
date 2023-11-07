@@ -1,3 +1,30 @@
+function removeEls(d, arr){
+	return arr.filter((i)=>{return i!==d});
+}
+
+function checker(lstChk){
+	let validate=true;
+	let slSp=lstChk.split('/');
+	if (slSp.length === 1){
+		validate = false;
+	}else{
+
+		if (lstChk.split('://')[0] === ""){
+			validate = false;
+		}
+
+		if (lstChk.split('://')[lstChk.split('://').length + 1] === ""){
+			validate = false;
+		}
+
+		if (lstChk.split('://').join('').split('/').length !== removeEls("", lstChk.split('://').join('').split('/')).length){
+			validate = false;
+		}
+		
+	}
+	return validate;
+}
+
 function setupEvents(){
 	window.addEventListener('pointerdown',(e)=>{
 		let t=e.target;
@@ -15,16 +42,18 @@ function setupEvents(){
 	window.addEventListener('click',(e)=>{
 		let t=e.target;
 		if(t.tagName==='A'){
-			let lc=(e.button===0)?true:false;
-			let altLc=(e.altKey && lc)?true:false;
-			if(!altLc){
-				e.preventDefault();
-				e.stopPropagation();
-			}
-			if(lc && !altLc){
-				let nm=( e.shiftKey && (!(e.shiftKey && ( e.ctrlKey || e.altKey ) )) )?'':'_blank'; //new window is ''
-				nm=( e.shiftKey || e.ctrlKey  )?nm:'_self';
-				window.open(t.href, nm);
+			if(checker(t.href)===true){
+				let lc=(e.button===0)?true:false;
+				let altLc=(e.altKey && lc)?true:false;
+				if(!altLc){
+					e.preventDefault();
+					e.stopPropagation();
+				}
+				if(lc && !altLc){
+					let nm=( e.shiftKey && (!(e.shiftKey && ( e.ctrlKey || e.altKey ) )) )?'':'_blank'; //new window is ''
+					nm=( e.shiftKey || e.ctrlKey  )?nm:'_self';
+					window.open(t.href, nm);
+				}
 			}
 		}
 	});
