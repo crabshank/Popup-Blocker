@@ -6,19 +6,19 @@ function checker(lstChk){
 	let validate=true;
 	let slSp=lstChk.split('/');
 	if (slSp.length === 1){
-		validate = false;
+		return false;
 	}else{
-
-		if (lstChk.split('://')[0] === ""){
-			validate = false;
+		let lspc=lstChk.split('://');
+		if (lspc[0] === ""){
+			return false;
 		}
 
-		if (lstChk.split('://')[lstChk.split('://').length + 1] === ""){
-			validate = false;
+		if (lspc[lspc.length + 1] === ""){
+			return false;
 		}
-
-		if (lstChk.split('://').join('').split('/').length !== removeEls("", lstChk.split('://').join('').split('/')).length){
-			validate = false;
+		let lspcj=lspc.join('').split('/');
+		if (lspcj.length !== removeEls("", lspcj).length){
+			return false;
 		}
 		
 	}
