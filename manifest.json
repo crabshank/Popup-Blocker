@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Popup closer",
-  "version": "2023.11",
+  "version": "2023.12",
     "options_page":  "options.html",
    "background": {
 		"service_worker": "background.js"
@@ -15,7 +15,7 @@
       "js": ["content.js"]
     }
   ],
-     "permissions": ["tabs", "activeTab","scripting","storage","webNavigation"],
+     "permissions": ["tabs", "activeTab","scripting","storage","webNavigation", "offscreen"],
   "action": {
     "default_icon": "close.png",
 	   "default_title": "Close popup tabs/windows"

@@ -1,3 +1,23 @@
+try {
+
+async function createOffscreen() {
+  await chrome.offscreen.createDocument({
+	url: 'offscreen.html',
+	reasons: ['BLOBS'],
+	justification: 'Keep service worker running',
+  }).catch(() => {});
+}
+
+function createOffscreen2() {
+	if(createOffscreen!==null){
+		createOffscreen();
+		createOffscreen=null;
+	}
+}
+
+chrome.runtime.onStartup.addListener(createOffscreen2);
+createOffscreen2();
+	
 function getUrl(tab) {
 	return (tab.url == "" && !!tab.pendingUrl && typeof tab.pendingUrl !== 'undefined' && tab.pendingUrl != '') ? tab.pendingUrl : tab.url;
 }
@@ -26,8 +46,6 @@ function isChrTab(tu) {
 
 var f_queue=[]; 
 var prg=false;
-
-try {
 
 var blacklist=[];
 var whitelist=[];
