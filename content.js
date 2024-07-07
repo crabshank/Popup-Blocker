@@ -52,9 +52,9 @@ function setupEvents(){
 				if(lc && !altLc){
 					let nm=( e.shiftKey && (!(e.shiftKey && ( e.ctrlKey || e.altKey ) )) )?'':'_blank'; //new window is ''
 					nm=( e.shiftKey || e.ctrlKey  )?nm:'_self';
-					try{
+					if(!nm.startsWith('data:')){
 						window.open(t.href, nm);
-					}catch(e){;}
+					}
 				}
 			}
 		}
