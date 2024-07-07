@@ -41,7 +41,7 @@ function setupEvents(){
 	});
 	window.addEventListener('click',(e)=>{
 		let t=e.target;
-		if(t.tagName==='A'){
+		if(t.tagName==='A' && !t.href.startsWith('data:') ){
 			if(checker(t.href)===true){
 				let lc=(e.button===0)?true:false;
 				let altLc=(e.altKey && lc)?true:false;
@@ -52,9 +52,6 @@ function setupEvents(){
 				if(lc && !altLc){
 					let nm=( e.shiftKey && (!(e.shiftKey && ( e.ctrlKey || e.altKey ) )) )?'':'_blank'; //new window is ''
 					nm=( e.shiftKey || e.ctrlKey  )?nm:'_self';
-					if(!t.href.startsWith('data:')){
-						window.open(t.href, nm);
-					}
 				}
 			}
 		}
